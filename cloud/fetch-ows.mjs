@@ -110,10 +110,37 @@ async function clickListItem(page, want) {
   return false;
 }
 
-async function closeOverlays(page) {
-  for (let i = 0; i < 3; i++) {
+async function hideExtPopups(target) {
+  await target
+    .evaluate(() => {
+      try {
+        if (window.Ext && Ext.menu && Ext.menu.MenuMgr) Ext.menu.MenuMgr.hideAll();
+      } catch {}
+      try {
+        if (window.Ext && Ext.WindowMgr) Ext.WindowMgr.hideAll();
+      } catch {}
+      document.querySelectorAll(".x-date-picker, .x-datetime-picker, .x-combo-list").forEach((el) => {
+        el.style.display = "none";
+        el.style.visibility = "hidden";
+      });
+      document.querySelectorAll(".x-layer").forEach((el) => {
+        const t = el.innerText || "";
+        if (/Current Page/.test(t)) return;
+        if (/Clear|Update|NPM|\bPM\b|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/.test(t)) {
+          el.style.display = "none";
+          el.style.visibility = "hidden";
+        }
+      });
+    })
+    .catch(() => {});
+}
+
+async function closeOverlays(page, ows) {
+  if (ows) await hideExtPopups(ows);
+  for (const f of page.frames()) await hideExtPopups(f);
+  for (let i = 0; i < 2; i++) {
     await page.keyboard.press("Escape").catch(() => {});
-    await page.waitForTimeout(150);
+    await page.waitForTimeout(120);
   }
 }
 
@@ -133,11 +160,68 @@ async function clickMatching(page, pattern) {
           return t;
         }
         return "";
-      })
+      }, pattern)
       .catch(() => "");
     if (clicked) {
       console.log("clicked", clicked);
       return true;
+    }
+  }
+  return false;
+}
+
+async function dumpLayers(page, label) {
+  for (const f of page.frames()) {
+    const layers = await f
+      .evaluate(() =>
+        [...document.querySelectorAll(".x-menu, .x-layer, .x-combo-list, .x-date-picker, .sdm_splitbutton")]
+          .filter((el) => el.offsetWidth > 0 && el.offsetHeight > 0)
+          .slice(0, 12)
+          .map((el) => ({
+            cls: String(el.className || "").slice(0, 70),
+            t: (el.innerText || "").replace(/\s+/g, " ").slice(0, 70),
+            w: el.offsetWidth,
+            h: el.offsetHeight,
+          }))
+      )
+      .catch(() => []);
+    if (layers && layers.length) console.log(label, f.url().slice(-60), JSON.stringify(layers));
+  }
+}
+
+async function clickExportAll(page) {
+  for (const f of page.frames()) {
+    const hit = await f
+      .evaluate(() => {
+        const nodes = [
+          ...document.querySelectorAll(".x-menu-item-text, .x-menu-item, .x-menu span, .x-menu a, .x-menu li, .x-layer span"),
+        ];
+        const el = nodes.find((n) => {
+          const t = (n.innerText || "").trim();
+          if (t !== "All") return false;
+          const r = n.getBoundingClientRect();
+          return r.width >= 8 && r.height >= 8 && r.width < 320 && r.height < 48;
+        });
+        if (!el) return "";
+        el.click();
+        return String(el.className || "ok").slice(0, 80);
+      })
+      .catch(() => "");
+    if (hit) {
+      console.log("export all", hit);
+      return true;
+    }
+  }
+  for (const f of page.frames()) {
+    const loc = f.getByText(/^All$/, { exact: true });
+    const n = await loc.count().catch(() => 0);
+    for (let i = 0; i < n; i++) {
+      const el = loc.nth(i);
+      if (await el.isVisible().catch(() => false)) {
+        await el.click();
+        console.log("export all locator");
+        return true;
+      }
     }
   }
   return false;
@@ -190,6 +274,7 @@ const context = await browser.newContext({
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
 });
 const page = await context.newPage();
+page.on("dialog", (d) => d.accept().catch(() => {}));
 
 try {
   const resp = await page.goto(homeUrl, { waitUntil: "load", timeout: 120000 });
@@ -224,7 +309,7 @@ try {
   }
   if (!ows) throw new Error("Ooredoo query frame not found");
   console.log("ows frame", ows.url());
-  await page.keyboard.press("Escape").catch(() => {});
+  await closeOverlays(page, ows);
 
   async function owsEval(fn, arg) {
     return ows.evaluate(fn, arg);
@@ -240,8 +325,12 @@ try {
     return "clicked:" + (input.className || "") + ":" + (input.value || "");
   });
   console.log("task type", typeClick);
-  await page.waitForTimeout(700);
-  let pmPick = await clickListItem(page, "PM");
+  await page.waitForTimeout(400);
+  let pmPick = false;
+  for (let i = 0; i < 8 && !pmPick; i++) {
+    pmPick = await clickListItem(page, "PM");
+    if (!pmPick) await page.waitForTimeout(400);
+  }
   if (!pmPick) {
     pmPick = await owsEval(() => {
       const items = [...document.querySelectorAll(".x-combo-list-item, .x-boundlist-item, .x-combo-list div, .x-layer div")];
@@ -256,7 +345,7 @@ try {
     await page.keyboard.type("PM", { delay: 40 });
     await page.keyboard.press("Enter");
   }
-  await closeOverlays(page);
+  await closeOverlays(page, ows);
 
   const statusOpen = await owsEval(() => {
     const boxes = [...document.querySelectorAll("input.x-superboxselect-input-field, input.x-form-empty-field")];
@@ -285,7 +374,7 @@ try {
     await page.waitForTimeout(300);
   }
   await clickListItem(page, "completed");
-  await closeOverlays(page);
+  await closeOverlays(page, ows);
 
   const searchFill = await owsEval((text) => {
     const inputs = [...document.querySelectorAll(".toolbar_each input")];
@@ -315,22 +404,29 @@ try {
       const inputs = [...row.querySelectorAll("input")];
       if (!inputs.length) return "no-input";
       const setVal = (input, value) => {
-        input.focus();
         input.value = value;
         input.dispatchEvent(new Event("input", { bubbles: true }));
         input.dispatchEvent(new Event("change", { bubbles: true }));
-        input.blur();
+        input.dispatchEvent(new KeyboardEvent("keyup", { bubbles: true }));
+        input.dispatchEvent(new Event("blur", { bubbles: true }));
+        try {
+          if (window.Ext && input.id) {
+            const cmp = Ext.getCmp(input.id);
+            if (cmp && cmp.setRawValue) cmp.setRawValue(value);
+            else if (cmp && cmp.setValue) cmp.setValue(value);
+          }
+        } catch {}
       };
       setVal(inputs[0], fromVal);
       if (toVal && inputs[1]) setVal(inputs[1], toVal);
       return "ok:" + inputs.length + ":" + inputs.map((i) => i.value).join("|");
     }, { label, fromVal, toVal });
     console.log("date", label, res);
-    await closeOverlays(page);
+    await closeOverlays(page, ows);
   }
   await owsFillDates("Creation Time From", "2026-08-01 00:00:00", "2027-01-31 23:59:59");
   await owsFillDates("Completion Time Form", fromDate, "");
-  await closeOverlays(page);
+  await closeOverlays(page, ows);
 
   await shot(page, "03-filters.png");
 
@@ -344,7 +440,7 @@ try {
   console.log("search click", searched);
   if (searched !== "ok") throw new Error("Search button not found");
   await page.waitForTimeout(10000);
-  await closeOverlays(page);
+  await closeOverlays(page, ows);
   await shot(page, "04-after-search.png");
 
   const blobs = [];
@@ -354,38 +450,60 @@ try {
       const cd = headers["content-disposition"] || "";
       const ct = headers["content-type"] || "";
       const url = res.url();
+      if (/\.(js|css|png|gif|jpg|woff|svg)(\?|$)/i.test(url) || /javascript|css|image|font/.test(ct)) return;
+      if (cd || /xlsx|excel|octet-stream|spreadsheet|export|download/i.test(ct + url + cd)) {
+        console.log("net-file", res.status(), ct.slice(0, 60), cd.slice(0, 80), url.slice(0, 180));
+      } else if (!/\/(extjs|static|assets|adc-web\/ui)\//i.test(url)) {
+        console.log("net", res.status(), ct.slice(0, 40), url.slice(0, 160));
+      }
+      const buf = await res.body().catch(() => null);
+      if (!buf || buf.length < 1000) return;
+      const head = Buffer.from(buf.slice(0, 4)).toString();
       if (
+        head.startsWith("PK") ||
         /\.xlsx/i.test(cd + url) ||
-        /spreadsheetml|officedocument/i.test(ct) ||
+        /spreadsheetml|officedocument|ms-excel/i.test(ct) ||
         (/octet-stream/i.test(ct) && /export|download|xlsx/i.test(url + cd))
       ) {
-        const buf = await res.body();
-        if (buf && buf.length > 1000) blobs.push(buf);
+        blobs.push(buf);
+        console.log("captured blob", buf.length, ct, cd.slice(0, 80));
       }
     } catch {}
   };
   context.on("response", onRes);
 
   const downloadPromise = page.waitForEvent("download", { timeout: 180000 }).catch(() => null);
-  const popupPromise = page.waitForEvent("popup", { timeout: 20000 }).catch(() => null);
+  const popupPromise = page.waitForEvent("popup", { timeout: 25000 }).catch(() => null);
 
+  await closeOverlays(page, ows);
+  await dumpLayers(page, "layers pre-export");
   const exported = await owsEval(() => {
     const row = [...document.querySelectorAll(".toolbar_each")].find((el) => (el.innerText || "").trim() === "Export");
     if (!row) return "no-export";
-    const btn = row.querySelector(".sdm_splitbutton_text, button, .sdm_button, .toolbar_each_input");
-    if (!btn) return "no-btn";
-    btn.click();
+    const input = row.querySelector(".toolbar_each_input");
+    const btn = row.querySelector(".sdm_splitbutton_text, button, .sdm_button");
+    if (input) input.click();
+    else if (btn) btn.click();
+    else return "no-btn";
     return "ok";
   });
   console.log("export click", exported);
   if (exported !== "ok") throw new Error("Export button not found");
   await page.waitForTimeout(800);
+  await dumpLayers(page, "layers post-export");
   await shot(page, "05-export-menu.png");
-  const allClicked = await clickListItem(page, "All");
-  console.log("export all", allClicked);
+  let allClicked = await clickExportAll(page);
   if (!allClicked) {
-    await clickMatching(page, "^All$");
+    await owsEval(() => {
+      const row = [...document.querySelectorAll(".toolbar_each")].find((el) => (el.innerText || "").trim() === "Export");
+      const arrow = row && row.querySelector(".sdm_splitbutton_arrow, .x-btn-split-right, em, .sdm_splitbutton i");
+      if (arrow) arrow.click();
+    });
+    await page.waitForTimeout(600);
+    await dumpLayers(page, "layers post-arrow");
+    allClicked = await clickExportAll(page);
   }
+  console.log("export all clicked", allClicked);
   await shot(page, "06-after-export-all.png");
 
   let download = await downloadPromise;
