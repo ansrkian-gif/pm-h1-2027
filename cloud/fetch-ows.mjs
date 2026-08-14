@@ -31,7 +31,7 @@ async function debugDump(page, name) {
     `url=${page.url()}`,
     `title=${await page.title().catch(() => "")}`,
     `htmlLength=${html.length}`,
-    safe.slice(0, 12000),
+    safe.slice(0, 80000),
   ].join("\n");
   fs.writeFileSync(path.join(__dirname, name), text);
 }
@@ -43,13 +43,29 @@ async function ctxs(page) {
 async function firstVisible(page, builder) {
   for (const ctx of await ctxs(page)) {
     const loc = builder(ctx);
-    if (await loc.count()) {
-      const first = loc.first();
-      if (await first.isVisible().catch(() => false)) return first;
-      return first;
+    const n = await loc.count();
+    for (let i = 0; i < n; i++) {
+      const el = loc.nth(i);
+      if (await el.isVisible().catch(() => false)) return el;
     }
   }
   return null;
+}
+
+async function fillNearLabel(page, label, value) {
+  const lab = await firstVisible(page, (c) => c.getByText(new RegExp("^\\s*" + label + "\\s*$", "i")));
+  if (!lab) {
+    console.log("label missing", label);
+    return false;
+  }
+  const input = lab.locator("xpath=following::input[1]");
+  await input.click({ timeout: 8000 });
+  await input.fill("");
+  await input.fill(value);
+  const ok = await firstVisible(page, (c) => c.getByRole("button", { name: /^OK$/i }));
+  if (ok) await ok.click();
+  await page.waitForTimeout(300);
+  return true;
 }
 
 async function loginIfNeeded(page) {
@@ -117,15 +133,21 @@ try {
     await page.waitForTimeout(2500);
   }
 
-  const typeBox = await firstVisible(page, (c) => c.getByText(/^\s*PM\s*$/).or(c.getByLabel(/task type/i)));
-  if (typeBox) {
-    await typeBox.click();
-    const pm = await firstVisible(page, (c) => c.getByText(/^\s*PM\s*$/));
-    if (pm) await pm.click();
-  }
+  const typeTrigger = await firstVisible(page, (c) =>
+    c.locator(".sdm_splitbutton_text").filter({ hasText: /^-Select-$|^PM$/ })
+  );
+  if (!typeTrigger) throw new Error("Task Type dropdown not visible");
+  await typeTrigger.click();
+  await page.waitForTimeout(500);
+  const pm = await firstVisible(page, (c) => c.getByText(/^\s*PM\s*$/));
+  if (!pm) throw new Error("PM option not visible");
+  await pm.click();
+  await page.waitForTimeout(400);
 
-  const status = await firstVisible(page, (c) => c.getByText(/-Select-/).or(c.getByLabel(/status/i)));
-  if (status) await status.click();
+  const statusTrigger = await firstVisible(page, (c) =>
+    c.getByText(/^-Select-$/).or(c.getByPlaceholder(/status/i)).or(c.getByLabel(/^Status$/i))
+  );
+  if (statusTrigger) await statusTrigger.click();
   await page.waitForTimeout(400);
   const closed = await firstVisible(page, (c) => c.getByText(/^\s*closed\s*$/i));
   if (closed) await closed.click();
@@ -139,16 +161,10 @@ try {
   if (!searchBox) throw new Error("Task Id, Title, Site, FME box not found");
   await searchBox.fill(searchText);
 
-  const fromBox = await firstVisible(page, (c) =>
-    c.getByLabel(/Completion Time Form/i).or(c.getByLabel(/Completion Time From/i))
-  );
-  if (fromBox) {
-    await fromBox.click();
-    await fromBox.fill("");
-    await fromBox.fill(fromDate);
-    const ok = await firstVisible(page, (c) => c.getByRole("button", { name: /^OK$/i }));
-    if (ok) await ok.click();
-  }
+  await fillNearLabel(page, "Creation Time From", "2026-08-01 00:00:00");
+  await fillNearLabel(page, "Creation Time To", "2027-01-31 23:59:59");
+  await fillNearLabel(page, "Completion Time Form", fromDate);
+  await fillNearLabel(page, "Completion Time From", fromDate);
 
   await shot(page, "03-filters.png");
 
