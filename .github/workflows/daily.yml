@@ -27,7 +27,7 @@ jobs:
           OWS_URL: ${{ secrets.OWS_URL }}
           OWS_USER: ${{ secrets.OWS_USER }}
           OWS_PASS: ${{ secrets.OWS_PASS }}
-          OWS_FROM: "2026-08-01"
+          OWS_FROM: "2026-08-01 00:00:00"
           OWS_SEARCH: "_OGK Active and Passive"
         run: node fetch-ows.mjs
       - name: Build dashboard

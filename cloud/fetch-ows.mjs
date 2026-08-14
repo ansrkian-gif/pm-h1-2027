@@ -10,7 +10,8 @@ const queryHash = "#/WFMBase_custom/mission_control_service_separate/Query Task 
 const homeUrl = `${base}/portal-web/portal/homepage.html${queryHash}`;
 const user = process.env.OWS_USER;
 const pass = process.env.OWS_PASS;
-const fromDate = process.env.OWS_FROM || "2026-08-01 00:00:00";
+const fromRaw = (process.env.OWS_FROM || "2026-08-01 00:00:00").trim();
+const fromDate = /\d{2}:\d{2}:\d{2}/.test(fromRaw) ? fromRaw : `${fromRaw} 00:00:00`;
 const searchText = process.env.OWS_SEARCH || "_OGK Active and Passive";
 
 if (!user || !pass) {
@@ -78,6 +79,41 @@ async function logControls(page) {
       })
       .catch(() => []);
     if (info && info.length) console.log("controls", f.url(), JSON.stringify(info));
+  }
+}
+
+async function clickListItem(page, want) {
+  for (const f of page.frames()) {
+    const hit = await f
+      .evaluate((label) => {
+        const nodes = [
+          ...document.querySelectorAll(
+            ".x-menu-item-text, .x-menu-item, .x-combo-list-item, .x-boundlist-item, .x-layer .x-combo-list div, .x-superboxselect-item"
+          ),
+        ];
+        const el = nodes.find((n) => {
+          const t = (n.innerText || "").trim();
+          if (t !== label) return false;
+          const r = n.getBoundingClientRect();
+          return r.width >= 8 && r.height >= 8 && r.width < 320 && r.height < 48;
+        });
+        if (!el) return "";
+        el.click();
+        return String(el.className || "ok").slice(0, 80);
+      }, want)
+      .catch(() => "");
+    if (hit) {
+      console.log("list item", want, hit);
+      return true;
+    }
+  }
+  return false;
+}
+
+async function closeOverlays(page) {
+  for (let i = 0; i < 3; i++) {
+    await page.keyboard.press("Escape").catch(() => {});
+    await page.waitForTimeout(150);
   }
 }
 
@@ -201,24 +237,55 @@ try {
     const input = row && row.querySelector("input");
     if (!input) return "no-input";
     input.click();
-    return "clicked:" + (input.className || "");
+    return "clicked:" + (input.className || "") + ":" + (input.value || "");
   });
   console.log("task type", typeClick);
-  await page.waitForTimeout(600);
-  const pmPick = await owsEval(() => {
-    const items = [...document.querySelectorAll(".x-combo-list-item, .x-boundlist-item, .x-combo-list div, .x-layer div")];
-    const pm = items.find((el) => (el.innerText || "").trim() === "PM");
-    if (!pm) return "no-pm:" + items.slice(0, 12).map((e) => (e.innerText || "").trim()).filter(Boolean).join("|");
-    pm.click();
-    return "ok";
-  });
-  console.log("pm pick", pmPick);
-  if (!String(pmPick).startsWith("ok")) {
+  await page.waitForTimeout(700);
+  let pmPick = await clickListItem(page, "PM");
+  if (!pmPick) {
+    pmPick = await owsEval(() => {
+      const items = [...document.querySelectorAll(".x-combo-list-item, .x-boundlist-item, .x-combo-list div, .x-layer div")];
+      const pm = items.find((el) => (el.innerText || "").trim() === "PM");
+      if (!pm) return "no-pm:" + items.slice(0, 12).map((e) => (e.innerText || "").trim()).filter(Boolean).join("|");
+      pm.click();
+      return "ok";
+    });
+    console.log("pm pick", pmPick);
+  }
+  if (!pmPick || String(pmPick).startsWith("no-")) {
     await page.keyboard.type("PM", { delay: 40 });
     await page.keyboard.press("Enter");
   }
-  await page.keyboard.press("Escape").catch(() => {});
-  await page.waitForTimeout(300);
+  await closeOverlays(page);
+
+  const statusOpen = await owsEval(() => {
+    const boxes = [...document.querySelectorAll("input.x-superboxselect-input-field, input.x-form-empty-field")];
+    const status = boxes.find((i) => {
+      const row = i.closest(".toolbar_each");
+      const t = ((row && row.innerText) || "") + " " + (i.value || "") + " " + (i.placeholder || "");
+      return /Status|Select/i.test(t) && !/Task Type/i.test((row && row.innerText) || "");
+    }) || boxes[1];
+    if (!status) return "no-status";
+    status.click();
+    return "clicked:" + ((status.closest(".toolbar_each") || {}).innerText || "").slice(0, 40);
+  });
+  console.log("status", statusOpen);
+  await page.waitForTimeout(500);
+  await clickListItem(page, "closed");
+  await page.waitForTimeout(250);
+  if (statusOpen && statusOpen !== "no-status") {
+    await owsEval(() => {
+      const boxes = [...document.querySelectorAll("input.x-superboxselect-input-field")];
+      const status = boxes.find((i) => {
+        const row = i.closest(".toolbar_each");
+        return row && !/Task Type/i.test(row.innerText || "");
+      }) || boxes[1];
+      if (status) status.click();
+    });
+    await page.waitForTimeout(300);
+  }
+  await clickListItem(page, "completed");
+  await closeOverlays(page);
 
   const searchFill = await owsEval((text) => {
     const inputs = [...document.querySelectorAll(".toolbar_each input")];
@@ -227,7 +294,7 @@ try {
       inputs.find((i) => {
         const row = i.closest(".toolbar_each");
         const t = (row && row.innerText) || "";
-        return !/Task Type|Creation|Completion|Search|Export|Refresh/i.test(t);
+        return !/Task Type|Creation|Completion|Search|Export|Refresh|Select/i.test(t);
       });
     if (!box) return "no-search";
     box.focus();
@@ -239,61 +306,104 @@ try {
   console.log("search", searchFill);
   if (!String(searchFill).startsWith("ok")) throw new Error("Task Id, Title, Site, FME box not found");
 
-  async function owsFillDate(label, value) {
-    const res = await owsEval(({ label, value }) => {
+  async function owsFillDates(label, fromVal, toVal) {
+    const res = await owsEval(({ label, fromVal, toVal }) => {
       const row = [...document.querySelectorAll(".toolbar_each")].find((el) =>
         (el.innerText || "").includes(label)
       );
       if (!row) return "no-row";
-      const input = row.querySelector("input");
-      if (!input) return "no-input:" + (row.className || "");
-      input.focus();
-      input.click();
-      input.value = value;
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      input.dispatchEvent(new Event("change", { bubbles: true }));
-      input.blur();
-      return "ok:" + input.className + ":" + input.value;
-    }, { label, value });
+      const inputs = [...row.querySelectorAll("input")];
+      if (!inputs.length) return "no-input";
+      const setVal = (input, value) => {
+        input.focus();
+        input.value = value;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        input.blur();
+      };
+      setVal(inputs[0], fromVal);
+      if (toVal && inputs[1]) setVal(inputs[1], toVal);
+      return "ok:" + inputs.length + ":" + inputs.map((i) => i.value).join("|");
+    }, { label, fromVal, toVal });
     console.log("date", label, res);
-    await page.keyboard.press("Enter").catch(() => {});
-    await page.waitForTimeout(200);
+    await closeOverlays(page);
   }
-  await owsFillDate("Creation Time From", "2026-08-01 00:00:00");
-  await owsFillDate("Creation Time To", "2027-01-31 23:59:59");
-  await owsFillDate("Completion Time Form", fromDate);
-  await page.keyboard.press("Escape").catch(() => {});
+  await owsFillDates("Creation Time From", "2026-08-01 00:00:00", "2027-01-31 23:59:59");
+  await owsFillDates("Completion Time Form", fromDate, "");
+  await closeOverlays(page);
 
   await shot(page, "03-filters.png");
 
   const searched = await owsEval(() => {
     const row = [...document.querySelectorAll(".toolbar_each")].find((el) => (el.innerText || "").trim() === "Search");
-    const btn = row && row.querySelector(".sdm_splitbutton_text, button, .sdm_button");
+    const btn = row && row.querySelector(".sdm_splitbutton_text, button, .sdm_button, .toolbar_each_input");
     if (!btn) return "no-search-btn";
     btn.click();
     return "ok";
   });
   console.log("search click", searched);
   if (searched !== "ok") throw new Error("Search button not found");
-  await page.waitForTimeout(8000);
+  await page.waitForTimeout(10000);
+  await closeOverlays(page);
   await shot(page, "04-after-search.png");
 
-  const exportWait = page.waitForEvent("download", { timeout: 180000 });
+  const blobs = [];
+  const onRes = async (res) => {
+    try {
+      const headers = res.headers();
+      const cd = headers["content-disposition"] || "";
+      const ct = headers["content-type"] || "";
+      const url = res.url();
+      if (
+        /\.xlsx/i.test(cd + url) ||
+        /spreadsheetml|officedocument/i.test(ct) ||
+        (/octet-stream/i.test(ct) && /export|download|xlsx/i.test(url + cd))
+      ) {
+        const buf = await res.body();
+        if (buf && buf.length > 1000) blobs.push(buf);
+      }
+    } catch {}
+  };
+  context.on("response", onRes);
+
+  const downloadPromise = page.waitForEvent("download", { timeout: 180000 }).catch(() => null);
+  const popupPromise = page.waitForEvent("popup", { timeout: 20000 }).catch(() => null);
+
   const exported = await owsEval(() => {
     const row = [...document.querySelectorAll(".toolbar_each")].find((el) => (el.innerText || "").trim() === "Export");
-    const btn = row && row.querySelector(".sdm_splitbutton_text, button, .sdm_button");
-    if (!btn) return "no-export";
+    if (!row) return "no-export";
+    const btn = row.querySelector(".sdm_splitbutton_text, button, .sdm_button, .toolbar_each_input");
+    if (!btn) return "no-btn";
     btn.click();
     return "ok";
   });
   console.log("export click", exported);
   if (exported !== "ok") throw new Error("Export button not found");
-  const download = await exportWait;
-  await download.saveAs(outFile);
+  await page.waitForTimeout(800);
+  await shot(page, "05-export-menu.png");
+  const allClicked = await clickListItem(page, "All");
+  console.log("export all", allClicked);
+  if (!allClicked) {
+    await clickMatching(page, "^All$");
+  }
+  await shot(page, "06-after-export-all.png");
+
+  let download = await downloadPromise;
+  if (!download) {
+    const popup = await popupPromise;
+    if (popup) download = await popup.waitForEvent("download", { timeout: 120000 }).catch(() => null);
+  }
+  if (download) {
+    await download.saveAs(outFile);
+    console.log("Saved download", outFile, fs.statSync(outFile).size, download.suggestedFilename());
+  } else if (blobs.length) {
+    fs.writeFileSync(outFile, blobs[blobs.length - 1]);
+    console.log("Saved response body", outFile, fs.statSync(outFile).size);
+  }
+  context.off("response", onRes);
   if (!fs.existsSync(outFile) || fs.statSync(outFile).size < 1000) {
     throw new Error("Export did not produce a valid xlsx");
   }
-  console.log("Saved", outFile, fs.statSync(outFile).size, download.suggestedFilename());
 } catch (err) {
   await shot(page, "last-ows.png");
   await debugDump(page, "last-ows.txt");
