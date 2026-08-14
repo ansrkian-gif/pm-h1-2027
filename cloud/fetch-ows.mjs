@@ -52,6 +52,51 @@ async function firstVisible(page, builder) {
   return null;
 }
 
+async function logControls(page) {
+  for (const f of page.frames()) {
+    const info = await f
+      .evaluate(() => {
+        const out = [];
+        document.querySelectorAll("span, button, input, label, div").forEach((el) => {
+          const t = (el.innerText || el.value || "").trim().replace(/\s+/g, " ").slice(0, 48);
+          if (!t || t.length > 40) return;
+          const rec = el.getBoundingClientRect();
+          if (rec.width < 8 || rec.height < 8) return;
+          if (!/(Select|PM|Task Type|Status|Search|Export|Completion|Creation|closed|completed|Form|From)/i.test(t)) return;
+          out.push({ t, cls: String(el.className || "").slice(0, 60), w: Math.round(rec.width), h: Math.round(rec.height) });
+        });
+        return out.slice(0, 50);
+      })
+      .catch(() => []);
+    if (info && info.length) console.log("controls", f.url(), JSON.stringify(info));
+  }
+}
+
+async function clickMatching(page, pattern) {
+  for (const f of page.frames()) {
+    const clicked = await f
+      .evaluate((pat) => {
+        const r = new RegExp(pat);
+        const els = [...document.querySelectorAll("span, div, button, a, label, li")];
+        for (const el of els) {
+          const t = (el.innerText || "").trim().replace(/\s+/g, " ");
+          if (!r.test(t)) continue;
+          const rec = el.getBoundingClientRect();
+          if (rec.width < 8 || rec.height < 8) continue;
+          el.click();
+          return t;
+        }
+        return "";
+      })
+      .catch(() => "");
+    if (clicked) {
+      console.log("clicked", clicked);
+      return true;
+    }
+  }
+  return false;
+}
+
 async function fillNearLabel(page, label, value) {
   const lab = await firstVisible(page, (c) => c.getByText(new RegExp("^\\s*" + label + "\\s*$", "i")));
   if (!lab) {
@@ -119,6 +164,8 @@ try {
 
   await shot(page, "02-query-page.png");
   await debugDump(page, "02-query-page.txt");
+  await page.waitForTimeout(2000);
+  await logControls(page);
 
   let queryOpen = await firstVisible(page, (c) => c.getByText(/Query Task\s*\(?Ooredoo\)?/i));
   if (!queryOpen) {
@@ -133,15 +180,19 @@ try {
     await page.waitForTimeout(2500);
   }
 
-  const typeTrigger = await firstVisible(page, (c) =>
-    c.locator(".sdm_splitbutton_text").filter({ hasText: /^-Select-$|^PM$/ })
-  );
-  if (!typeTrigger) throw new Error("Task Type dropdown not visible");
-  await typeTrigger.click();
-  await page.waitForTimeout(500);
-  const pm = await firstVisible(page, (c) => c.getByText(/^\s*PM\s*$/));
-  if (!pm) throw new Error("PM option not visible");
-  await pm.click();
+  if (!(await clickMatching(page, "^[-–—]?\\s*Select\\s*[-–—]?$"))) {
+    const typeTrigger = await firstVisible(page, (c) =>
+      c.getByText(/Select/i).or(c.locator("[class*='splitbutton']"))
+    );
+    if (!typeTrigger) throw new Error("Task Type dropdown not visible");
+    await typeTrigger.click({ force: true });
+  }
+  await page.waitForTimeout(600);
+  if (!(await clickMatching(page, "^PM$"))) {
+    const pm = await firstVisible(page, (c) => c.getByText(/^\s*PM\s*$/));
+    if (!pm) throw new Error("PM option not visible");
+    await pm.click({ force: true });
+  }
   await page.waitForTimeout(400);
 
   const statusTrigger = await firstVisible(page, (c) =>
