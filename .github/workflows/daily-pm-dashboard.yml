@@ -1,0 +1,81 @@
+name: Daily PM H1 dashboard
+
+on:
+  schedule:
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: cloud/package.json
+      - name: Install
+        working-directory: cloud
+        run: npm install && npx playwright install --with-deps chromium
+      - name: Pull OWS extract
+        working-directory: cloud
+        env:
+          OWS_URL: ${{ secrets.OWS_URL }}
+          OWS_USER: ${{ secrets.OWS_USER }}
+          OWS_PASS: ${{ secrets.OWS_PASS }}
+          OWS_FROM: "2026-08-01"
+          OWS_SEARCH: "_OGK Active and Passive"
+        run: node fetch-ows.mjs
+      - name: Build dashboard
+        working-directory: cloud
+        env:
+          DASHBOARD_PIN: ${{ secrets.DASHBOARD_PIN }}
+          OWS_URL: ${{ secrets.OWS_URL }}
+        run: node process.mjs
+      - name: Upload OWS screenshots if pull failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ows-debug
+          path: cloud/*.png
+          if-no-files-found: ignore
+      - name: Publish phone page
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git clone --branch gh-pages --single-branch "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" _site
+          cp dashboard/index.html _site/index.html
+          cp dashboard/manifest.json _site/manifest.json
+          touch _site/.nojekyll
+          cd _site
+          git add index.html manifest.json .nojekyll
+          if git diff --cached --quiet; then
+            echo "No page changes"
+            exit 0
+          fi
+          git commit -m "Daily OWS dashboard refresh"
+          git push
+      - name: Telegram
+        if: success()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then exit 0; fi
+          MSG=$(cat dashboard/telegram.txt)
+          curl -sS -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="$TELEGRAM_CHAT_ID" \
+            --data-urlencode "text=PM H1 2027
+$MSG
+https://ansrkian-gif.github.io/pm-h1-2027/"
