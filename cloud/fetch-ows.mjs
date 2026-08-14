@@ -37,7 +37,16 @@ async function debugDump(page, name) {
 }
 
 async function ctxs(page) {
-  return [page, ...page.frames()];
+  const frames = [...page.frames()];
+  const rank = (f) => {
+    const u = f.url();
+    if (/mission_task_work_grid_ooredoo/i.test(u)) return 0;
+    if (/c_mission_control_service|adc-ui\/spl/i.test(u)) return 1;
+    if (/adc-web\/ui/i.test(u)) return 2;
+    return 3;
+  };
+  frames.sort((a, b) => rank(a) - rank(b));
+  return frames;
 }
 
 async function firstVisible(page, builder) {
@@ -80,6 +89,7 @@ async function clickMatching(page, pattern) {
         const els = [...document.querySelectorAll("span, div, button, a, label, li")];
         for (const el of els) {
           const t = (el.innerText || "").trim().replace(/\s+/g, " ");
+          if (t.length > 24) continue;
           if (!r.test(t)) continue;
           const rec = el.getBoundingClientRect();
           if (rec.width < 8 || rec.height < 8) continue;
@@ -167,69 +177,78 @@ try {
   await page.waitForTimeout(2000);
   await logControls(page);
 
-  let queryOpen = await firstVisible(page, (c) => c.getByText(/Query Task\s*\(?Ooredoo\)?/i));
-  if (!queryOpen) {
-    const taskMenu = await firstVisible(page, (c) => c.getByText(/^\s*Task\s*$/));
-    if (taskMenu) {
-      await taskMenu.click();
-      await page.waitForTimeout(1500);
+  let ows = page.frames().find((f) => /mission_task_work_grid_ooredoo/i.test(f.url()));
+  if (!ows) {
+    const queryOpen = await firstVisible(page, (c) => c.getByText(/Query Task\s*\(?Ooredoo\)?/i));
+    if (queryOpen) {
+      await queryOpen.click();
+      await page.waitForTimeout(2500);
     }
-    queryOpen = await firstVisible(page, (c) => c.getByText(/Query Task\s*\(?Ooredoo\)?/i));
-    if (!queryOpen) throw new Error("Query Task(Ooredoo) not found at " + page.url());
-    await queryOpen.click();
-    await page.waitForTimeout(2500);
+    ows = page.frames().find((f) => /mission_task_work_grid_ooredoo/i.test(f.url()));
   }
+  if (!ows) throw new Error("Ooredoo query frame not found");
+  console.log("ows frame", ows.url());
 
-  if (!(await clickMatching(page, "^[-–—]?\\s*Select\\s*[-–—]?$"))) {
-    const typeTrigger = await firstVisible(page, (c) =>
-      c.getByText(/Select/i).or(c.locator("[class*='splitbutton']"))
-    );
-    if (!typeTrigger) throw new Error("Task Type dropdown not visible");
-    await typeTrigger.click({ force: true });
-  }
-  await page.waitForTimeout(600);
-  if (!(await clickMatching(page, "^PM$"))) {
-    const pm = await firstVisible(page, (c) => c.getByText(/^\s*PM\s*$/));
-    if (!pm) throw new Error("PM option not visible");
-    await pm.click({ force: true });
-  }
+  const typeInput = ows.locator("input.x-superboxselect-input-field").first();
+  await typeInput.click({ timeout: 15000 });
+  await typeInput.fill("PM");
+  await page.waitForTimeout(500);
+  const pmItem = ows.locator(".x-combo-list-item, .x-boundlist-item").filter({ hasText: /^PM$/ }).first();
+  if (await pmItem.count()) await pmItem.click({ force: true });
+  else await page.keyboard.press("Enter");
   await page.waitForTimeout(400);
 
-  const statusTrigger = await firstVisible(page, (c) =>
-    c.getByText(/^-Select-$/).or(c.getByPlaceholder(/status/i)).or(c.getByLabel(/^Status$/i))
-  );
-  if (statusTrigger) await statusTrigger.click();
-  await page.waitForTimeout(400);
-  const closed = await firstVisible(page, (c) => c.getByText(/^\s*closed\s*$/i));
-  if (closed) await closed.click();
-  const completed = await firstVisible(page, (c) => c.getByText(/^\s*completed\s*$/i));
-  if (completed) await completed.click();
-  await page.keyboard.press("Escape").catch(() => {});
+  const superBoxes = ows.locator("input.x-superboxselect-input-field");
+  if ((await superBoxes.count()) > 1) {
+    const statusInput = superBoxes.nth(1);
+    await statusInput.click();
+    await statusInput.fill("closed");
+    await page.keyboard.press("Enter");
+    await page.waitForTimeout(200);
+    await statusInput.fill("completed");
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Escape");
+  }
 
-  const searchBox = await firstVisible(page, (c) =>
-    c.getByPlaceholder(/Task Id, Title, Site, FME/i).or(c.getByLabel(/Task Id, Title, Site, FME/i))
-  );
-  if (!searchBox) throw new Error("Task Id, Title, Site, FME box not found");
-  await searchBox.fill(searchText);
+  const searchBox = ows.getByPlaceholder(/Task Id, Title, Site, FME/i);
+  if (await searchBox.count()) {
+    await searchBox.fill(searchText);
+  } else {
+    const row = ows
+      .locator(".toolbar_each")
+      .filter({ hasNotText: /Task Type|Creation|Completion|Search|Export|Refresh/i })
+      .locator("input.x-form-field")
+      .first();
+    if (!(await row.count())) throw new Error("Task Id, Title, Site, FME box not found");
+    await row.fill(searchText);
+  }
 
-  await fillNearLabel(page, "Creation Time From", "2026-08-01 00:00:00");
-  await fillNearLabel(page, "Creation Time To", "2027-01-31 23:59:59");
-  await fillNearLabel(page, "Completion Time Form", fromDate);
-  await fillNearLabel(page, "Completion Time From", fromDate);
+  async function fillToolbarDate(label, value) {
+    const row = ows.locator(".toolbar_each").filter({ hasText: label }).first();
+    if (!(await row.count())) {
+      console.log("date missing", label);
+      return;
+    }
+    const inp = row.locator("input.x-form-field").first();
+    await inp.click();
+    await inp.fill(value);
+    await page.keyboard.press("Enter");
+    const ok = ows.getByRole("button", { name: /^OK$/i });
+    if (await ok.count()) await ok.first().click().catch(() => {});
+  }
+  await fillToolbarDate("Creation Time From", "2026-08-01 00:00:00");
+  await fillToolbarDate("Creation Time To", "2027-01-31 23:59:59");
+  await fillToolbarDate("Completion Time Form", fromDate);
 
   await shot(page, "03-filters.png");
 
-  const searchBtn = await firstVisible(page, (c) => c.getByRole("button", { name: /^Search$/i }));
-  if (!searchBtn) throw new Error("Search button not found");
-  await searchBtn.click();
-  await page.waitForTimeout(5000);
+  await ows.locator(".toolbar_each").filter({ hasText: /^Search$/ }).locator(".sdm_splitbutton_text").first().click();
+  await page.waitForTimeout(6000);
   await shot(page, "04-after-search.png");
 
-  const exportBtn = await firstVisible(page, (c) => c.getByRole("button", { name: /^Export$/i }));
-  if (!exportBtn) throw new Error("Export button not found");
   const [download] = await Promise.all([
     page.waitForEvent("download", { timeout: 180000 }),
-    exportBtn.click(),
+    ows.locator(".toolbar_each").filter({ hasText: /^Export$/ }).locator(".sdm_splitbutton_text").first().click(),
   ]);
   await download.saveAs(outFile);
   if (!fs.existsSync(outFile) || fs.statSync(outFile).size < 1000) {
