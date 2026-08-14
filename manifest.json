@@ -1,0 +1,8 @@
+{
+  "name": "PM H1 2027",
+  "short_name": "PM H1",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220"
+}
