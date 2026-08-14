@@ -188,68 +188,107 @@ try {
   }
   if (!ows) throw new Error("Ooredoo query frame not found");
   console.log("ows frame", ows.url());
+  await page.keyboard.press("Escape").catch(() => {});
 
-  const typeInput = ows.locator("input.x-superboxselect-input-field").first();
-  await typeInput.click({ timeout: 15000 });
-  await typeInput.fill("PM");
-  await page.waitForTimeout(500);
-  const pmItem = ows.locator(".x-combo-list-item, .x-boundlist-item").filter({ hasText: /^PM$/ }).first();
-  if (await pmItem.count()) await pmItem.click({ force: true });
-  else await page.keyboard.press("Enter");
-  await page.waitForTimeout(400);
+  async function owsEval(fn, arg) {
+    return ows.evaluate(fn, arg);
+  }
 
-  const superBoxes = ows.locator("input.x-superboxselect-input-field");
-  if ((await superBoxes.count()) > 1) {
-    const statusInput = superBoxes.nth(1);
-    await statusInput.click();
-    await statusInput.fill("closed");
+  const typeClick = await owsEval(() => {
+    const row = [...document.querySelectorAll(".toolbar_each")].find((el) =>
+      (el.innerText || "").includes("Task Type")
+    );
+    const input = row && row.querySelector("input");
+    if (!input) return "no-input";
+    input.click();
+    return "clicked:" + (input.className || "");
+  });
+  console.log("task type", typeClick);
+  await page.waitForTimeout(600);
+  const pmPick = await owsEval(() => {
+    const items = [...document.querySelectorAll(".x-combo-list-item, .x-boundlist-item, .x-combo-list div, .x-layer div")];
+    const pm = items.find((el) => (el.innerText || "").trim() === "PM");
+    if (!pm) return "no-pm:" + items.slice(0, 12).map((e) => (e.innerText || "").trim()).filter(Boolean).join("|");
+    pm.click();
+    return "ok";
+  });
+  console.log("pm pick", pmPick);
+  if (!String(pmPick).startsWith("ok")) {
+    await page.keyboard.type("PM", { delay: 40 });
     await page.keyboard.press("Enter");
+  }
+  await page.keyboard.press("Escape").catch(() => {});
+  await page.waitForTimeout(300);
+
+  const searchFill = await owsEval((text) => {
+    const inputs = [...document.querySelectorAll(".toolbar_each input")];
+    const box =
+      inputs.find((i) => /Task Id|Title|Site|FME/i.test(i.placeholder || i.title || "")) ||
+      inputs.find((i) => {
+        const row = i.closest(".toolbar_each");
+        const t = (row && row.innerText) || "";
+        return !/Task Type|Creation|Completion|Search|Export|Refresh/i.test(t);
+      });
+    if (!box) return "no-search";
+    box.focus();
+    box.value = text;
+    box.dispatchEvent(new Event("input", { bubbles: true }));
+    box.dispatchEvent(new Event("change", { bubbles: true }));
+    return "ok:" + (box.placeholder || box.className);
+  }, searchText);
+  console.log("search", searchFill);
+  if (!String(searchFill).startsWith("ok")) throw new Error("Task Id, Title, Site, FME box not found");
+
+  async function owsFillDate(label, value) {
+    const res = await owsEval(({ label, value }) => {
+      const row = [...document.querySelectorAll(".toolbar_each")].find((el) =>
+        (el.innerText || "").includes(label)
+      );
+      if (!row) return "no-row";
+      const input = row.querySelector("input");
+      if (!input) return "no-input:" + (row.className || "");
+      input.focus();
+      input.click();
+      input.value = value;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      input.blur();
+      return "ok:" + input.className + ":" + input.value;
+    }, { label, value });
+    console.log("date", label, res);
+    await page.keyboard.press("Enter").catch(() => {});
     await page.waitForTimeout(200);
-    await statusInput.fill("completed");
-    await page.keyboard.press("Enter");
-    await page.keyboard.press("Escape");
   }
-
-  const searchBox = ows.getByPlaceholder(/Task Id, Title, Site, FME/i);
-  if (await searchBox.count()) {
-    await searchBox.fill(searchText);
-  } else {
-    const row = ows
-      .locator(".toolbar_each")
-      .filter({ hasNotText: /Task Type|Creation|Completion|Search|Export|Refresh/i })
-      .locator("input.x-form-field")
-      .first();
-    if (!(await row.count())) throw new Error("Task Id, Title, Site, FME box not found");
-    await row.fill(searchText);
-  }
-
-  async function fillToolbarDate(label, value) {
-    const row = ows.locator(".toolbar_each").filter({ hasText: label }).first();
-    if (!(await row.count())) {
-      console.log("date missing", label);
-      return;
-    }
-    const inp = row.locator("input.x-form-field").first();
-    await inp.click();
-    await inp.fill(value);
-    await page.keyboard.press("Enter");
-    const ok = ows.getByRole("button", { name: /^OK$/i });
-    if (await ok.count()) await ok.first().click().catch(() => {});
-  }
-  await fillToolbarDate("Creation Time From", "2026-08-01 00:00:00");
-  await fillToolbarDate("Creation Time To", "2027-01-31 23:59:59");
-  await fillToolbarDate("Completion Time Form", fromDate);
+  await owsFillDate("Creation Time From", "2026-08-01 00:00:00");
+  await owsFillDate("Creation Time To", "2027-01-31 23:59:59");
+  await owsFillDate("Completion Time Form", fromDate);
+  await page.keyboard.press("Escape").catch(() => {});
 
   await shot(page, "03-filters.png");
 
-  await ows.locator(".toolbar_each").filter({ hasText: /^Search$/ }).locator(".sdm_splitbutton_text").first().click();
-  await page.waitForTimeout(6000);
+  const searched = await owsEval(() => {
+    const row = [...document.querySelectorAll(".toolbar_each")].find((el) => (el.innerText || "").trim() === "Search");
+    const btn = row && row.querySelector(".sdm_splitbutton_text, button, .sdm_button");
+    if (!btn) return "no-search-btn";
+    btn.click();
+    return "ok";
+  });
+  console.log("search click", searched);
+  if (searched !== "ok") throw new Error("Search button not found");
+  await page.waitForTimeout(8000);
   await shot(page, "04-after-search.png");
 
-  const [download] = await Promise.all([
-    page.waitForEvent("download", { timeout: 180000 }),
-    ows.locator(".toolbar_each").filter({ hasText: /^Export$/ }).locator(".sdm_splitbutton_text").first().click(),
-  ]);
+  const exportWait = page.waitForEvent("download", { timeout: 180000 });
+  const exported = await owsEval(() => {
+    const row = [...document.querySelectorAll(".toolbar_each")].find((el) => (el.innerText || "").trim() === "Export");
+    const btn = row && row.querySelector(".sdm_splitbutton_text, button, .sdm_button");
+    if (!btn) return "no-export";
+    btn.click();
+    return "ok";
+  });
+  console.log("export click", exported);
+  if (exported !== "ok") throw new Error("Export button not found");
+  const download = await exportWait;
   await download.saveAs(outFile);
   if (!fs.existsSync(outFile) || fs.statSync(outFile).size < 1000) {
     throw new Error("Export did not produce a valid xlsx");
