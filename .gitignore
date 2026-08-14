@@ -1,0 +1,10 @@
+secrets.json
+*.credential
+cloud/node_modules/
+cloud/extract.xlsx
+cloud/last-ows.png
+cloud/package-lock.json
+tools/
+*.xlsx
+~$*
+dashboard/.pin-local.txt

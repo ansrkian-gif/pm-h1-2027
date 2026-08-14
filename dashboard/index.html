@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="PM H1" />
+  <title>PM H1 2027</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #141c2e;
+      --line: #243049;
+      --text: #f4f7fb;
+      --muted: #93a0b8;
+      --good: #3dd68c;
+      --watch: #f5b942;
+      --bad: #ff6b6b;
+      --accent: #4c8dff;
+      --pad: max(16px, env(safe-area-inset-left));
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+    body { padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
+    header {
+      position: sticky; top: 0; z-index: 5;
+      background: rgba(11,18,32,.92);
+      backdrop-filter: blur(12px);
+      padding: calc(12px + env(safe-area-inset-top)) var(--pad) 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .kicker { color: var(--muted); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { font-size: 22px; margin: 4px 0 0; font-weight: 700; }
+    main { padding: 16px var(--pad) 0; max-width: 560px; margin: 0 auto; }
+    .shape {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 10px; padding: 6px 10px; border-radius: 999px;
+      font-size: 12px; font-weight: 700;
+    }
+    .shape.GOOD { background: rgba(61,214,140,.15); color: var(--good); }
+    .shape.WATCH { background: rgba(245,185,66,.15); color: var(--watch); }
+    .shape.BAD { background: rgba(255,107,107,.15); color: var(--bad); }
+    .kpis {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 10px;
+    }
+    .kpi {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 16px; padding: 14px 14px 12px;
+    }
+    .kpi b { display: block; font-size: 26px; line-height: 1.1; }
+    .kpi span { color: var(--muted); font-size: 12px; }
+    .card {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 18px; padding: 14px; margin-bottom: 10px;
+    }
+    .card h2 { font-size: 13px; color: var(--muted); margin: 0 0 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+    .hero { display: flex; align-items: center; gap: 16px; }
+    .ring { width: 118px; height: 118px; flex: 0 0 118px; }
+    .hero-stats { flex: 1; display: grid; gap: 8px; }
+    .hero-stats div { font-size: 13px; color: var(--muted); }
+    .hero-stats b { color: var(--text); font-size: 16px; }
+    .legend { display: flex; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: 11px; margin: 0 0 10px; }
+    .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+    .trend { display: flex; align-items: flex-end; gap: 5px; height: 92px; }
+    .tcol { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; height: 100%; }
+    .tstack { flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; }
+    .tstack .h { background: var(--good); border-radius: 0 0 4px 4px; min-height: 0; }
+    .tstack .m { background: var(--bad); border-radius: 4px 4px 0 0; min-height: 0; }
+    .tcol .n { color: var(--muted); font-size: 9px; margin-top: 4px; }
+    .heat-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+    .heat {
+      display: grid; gap: 4px; min-width: min-content;
+      grid-template-columns: 58px repeat(var(--ndays, 12), 22px);
+      font-size: 10px;
+    }
+    .heat .hd, .heat .lab { color: var(--muted); }
+    .heat .hd { text-align: center; font-size: 9px; }
+    .heat .lab {
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      align-self: center; font-weight: 600; color: var(--text);
+    }
+    .cell {
+      width: 22px; height: 22px; border-radius: 6px; border: 0;
+      padding: 0; appearance: none; -webkit-appearance: none;
+    }
+    .cell.hit { background: var(--good); }
+    .cell.miss { background: var(--bad); }
+    .cell.empty { background: #1e2940; }
+    #heatTip { min-height: 18px; margin-top: 8px; color: var(--muted); font-size: 12px; }
+    .fme {
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      padding: 12px 0; border-bottom: 1px solid var(--line);
+    }
+    .fme:last-child { border-bottom: 0; padding-bottom: 2px; }
+    .fme-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+    .name { font-weight: 700; font-size: 16px; }
+    .meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    .bar { height: 6px; background: #1e2940; border-radius: 99px; margin-top: 10px; overflow: hidden; }
+    .bar i { display: block; height: 100%; border-radius: 99px; }
+    .spark { display: flex; gap: 3px; margin-top: 10px; }
+    .spark b { flex: 1; height: 8px; border-radius: 3px; background: #1e2940; }
+    .spark b.hit { background: var(--good); }
+    .spark b.miss { background: var(--bad); }
+    .days {
+      display: none; gap: 6px; overflow-x: auto; padding: 12px 0 2px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .fme.open .days { display: flex; }
+    .chip {
+      min-width: 52px; text-align: center; border-radius: 12px;
+      padding: 8px 6px; font-size: 11px; background: #1a2336; color: var(--muted);
+    }
+    .chip b { display: block; font-size: 13px; color: var(--text); }
+    .chip.hit { background: rgba(61,214,140,.14); }
+    .chip.miss { background: rgba(255,107,107,.14); }
+    .chip.empty { opacity: .45; }
+    .row {
+      display: flex; justify-content: space-between; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px;
+    }
+    .row:last-child { border-bottom: 0; }
+    .muted { color: var(--muted); }
+    footer { color: var(--muted); font-size: 12px; padding: 20px var(--pad); max-width: 560px; margin: 0 auto; line-height: 1.45; }
+    .hint {
+      background: #10192b; border: 1px dashed var(--line); border-radius: 14px;
+      padding: 12px; font-size: 13px; color: var(--muted); margin: 0 0 12px;
+    }
+    #lock {
+      display: none; position: fixed; inset: 0; background: var(--bg); z-index: 20;
+      padding: calc(48px + env(safe-area-inset-top)) 24px; text-align: center;
+    }
+    #lock input {
+      width: 100%; max-width: 280px; margin-top: 16px; padding: 14px;
+      border-radius: 12px; border: 1px solid var(--line); background: var(--card);
+      color: var(--text); font-size: 18px; text-align: center;
+    }
+    #pinGo {
+      display: block; width: 100%; max-width: 280px; margin: 12px auto 0;
+      padding: 14px; border: 0; border-radius: 12px; background: var(--accent);
+      color: #fff; font-size: 16px; font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div id="lock">
+    <div class="kicker">PM H1 2027</div>
+    <h1>Enter PIN</h1>
+    <input id="pin" type="password" inputmode="numeric" maxlength="12" placeholder="PIN" />
+    <button type="button" id="pinGo">Open</button>
+  </div>
+  <header>
+    <div class="kicker">Kuwait Ooredoo FMO</div>
+    <h1>PM H1 2027</h1>
+    <div id="shape" class="shape">...</div>
+  </header>
+  <main>
+    <p class="hint">Green = on target. Red = below. Grey = off that day. Friday is not scored. Target is 3 paired tasks, or 5 if Small Cell only.</p>
+    <section class="card">
+      <div class="hero">
+        <div id="ring"></div>
+        <div class="hero-stats" id="heroStats"></div>
+      </div>
+    </section>
+    <div class="kpis" id="kpis"></div>
+    <section class="card">
+      <h2>Daily team</h2>
+      <div class="legend"><span><i style="background:var(--good)"></i>On target</span><span><i style="background:var(--bad)"></i>Below</span></div>
+      <div class="trend" id="trend"></div>
+    </section>
+    <section class="card">
+      <h2>FME heatmap</h2>
+      <div class="legend"><span><i style="background:var(--good)"></i>Hit</span><span><i style="background:var(--bad)"></i>Miss</span><span><i style="background:#1e2940"></i>Off</span></div>
+      <div class="heat-wrap" id="heat"></div>
+      <div id="heatTip">Tap a square for the score.</div>
+    </section>
+    <section class="card">
+      <h2>NTE FME performance</h2>
+      <div id="fmes"></div>
+    </section>
+    <section class="card">
+      <h2>Below target</h2>
+      <div id="below"></div>
+    </section>
+    <section class="card">
+      <h2>Duplicates ignored</h2>
+      <div id="ex"></div>
+    </section>
+  </main>
+  <footer id="foot"></footer>
+  <script>
+    const DATA = {"generatedAt":"2026-08-15 01:21","sourceFile":"PM H1 2027.xlsx","owsUrl":"https://106d-sg.teleows.com/","kpis":{"tasks":224,"sites":224,"fmes":7,"onTarget":62,"fmeDays":79,"hitPct":78,"shape":"WATCH","below":17,"expected":239,"actual":224,"pairs":215,"smallCell":9},"days":["2026-08-01","2026-08-02","2026-08-03","2026-08-04","2026-08-05","2026-08-06","2026-08-08","2026-08-09","2026-08-10","2026-08-11","2026-08-12","2026-08-13"],"fme":[{"name":"Azzam Mushtaque M M Ali Momin","daysWorked":11,"ap":33,"sc":1,"actual":34,"expected":33,"avg":3.1,"onTarget":11,"below":0,"hitPct":100,"shape":"GOOD","daily":[{"day":"2026-08-01","actual":3,"target":3,"hit":true},{"day":"2026-08-02","actual":3,"target":3,"hit":true},{"day":"2026-08-03","actual":4,"target":3,"hit":true},{"day":"2026-08-04","actual":null,"target":null,"hit":null},{"day":"2026-08-05","actual":3,"target":3,"hit":true},{"day":"2026-08-06","actual":3,"target":3,"hit":true},{"day":"2026-08-08","actual":3,"target":3,"hit":true},{"day":"2026-08-09","actual":3,"target":3,"hit":true},{"day":"2026-08-10","actual":3,"target":3,"hit":true},{"day":"2026-08-11","actual":3,"target":3,"hit":true},{"day":"2026-08-12","actual":3,"target":3,"hit":true},{"day":"2026-08-13","actual":3,"target":3,"hit":true}]},{"name":"Mohammed Javeed Shaik","daysWorked":12,"ap":35,"sc":2,"actual":37,"expected":36,"avg":3.1,"onTarget":11,"below":1,"hitPct":92,"shape":"GOOD","daily":[{"day":"2026-08-01","actual":3,"target":3,"hit":true},{"day":"2026-08-02","actual":3,"target":3,"hit":true},{"day":"2026-08-03","actual":3,"target":3,"hit":true},{"day":"2026-08-04","actual":3,"target":3,"hit":true},{"day":"2026-08-05","actual":3,"target":3,"hit":true},{"day":"2026-08-06","actual":4,"target":3,"hit":true},{"day":"2026-08-08","actual":3,"target":3,"hit":true},{"day":"2026-08-09","actual":4,"target":3,"hit":true},{"day":"2026-08-10","actual":3,"target":3,"hit":true},{"day":"2026-08-11","actual":3,"target":3,"hit":true},{"day":"2026-08-12","actual":2,"target":3,"hit":false},{"day":"2026-08-13","actual":3,"target":3,"hit":true}]},{"name":"Saji Joseph","daysWorked":12,"ap":35,"sc":0,"actual":35,"expected":36,"avg":2.9,"onTarget":11,"below":1,"hitPct":92,"shape":"GOOD","daily":[{"day":"2026-08-01","actual":3,"target":3,"hit":true},{"day":"2026-08-02","actual":3,"target":3,"hit":true},{"day":"2026-08-03","actual":3,"target":3,"hit":true},{"day":"2026-08-04","actual":2,"target":3,"hit":false},{"day":"2026-08-05","actual":3,"target":3,"hit":true},{"day":"2026-08-06","actual":3,"target":3,"hit":true},{"day":"2026-08-08","actual":3,"target":3,"hit":true},{"day":"2026-08-09","actual":3,"target":3,"hit":true},{"day":"2026-08-10","actual":3,"target":3,"hit":true},{"day":"2026-08-11","actual":3,"target":3,"hit":true},{"day":"2026-08-12","actual":3,"target":3,"hit":true},{"day":"2026-08-13","actual":3,"target":3,"hit":true}]},{"name":"Peter Kunnath M K Mathai","daysWorked":10,"ap":29,"sc":0,"actual":29,"expected":30,"avg":2.9,"onTarget":8,"below":2,"hitPct":80,"shape":"GOOD","daily":[{"day":"2026-08-01","actual":3,"target":3,"hit":true},{"day":"2026-08-02","actual":3,"target":3,"hit":true},{"day":"2026-08-03","actual":null,"target":null,"hit":null},{"day":"2026-08-04","actual":null,"target":null,"hit":null},{"day":"2026-08-05","actual":2,"target":3,"hit":false},{"day":"2026-08-06","actual":2,"target":3,"hit":false},{"day":"2026-08-08","actual":3,"target":3,"hit":true},{"day":"2026-08-09","actual":3,"target":3,"hit":true},{"day":"2026-08-10","actual":3,"target":3,"hit":true},{"day":"2026-08-11","actual":3,"target":3,"hit":true},{"day":"2026-08-12","actual":3,"target":3,"hit":true},{"day":"2026-08-13","actual":4,"target":3,"hit":true}]},{"name":"Nabijohn Piyarjan Piyarjan","daysWorked":12,"ap":32,"sc":0,"actual":32,"expected":36,"avg":2.7,"onTarget":8,"below":4,"hitPct":67,"shape":"WATCH","daily":[{"day":"2026-08-01","actual":2,"target":3,"hit":false},{"day":"2026-08-02","actual":1,"target":3,"hit":false},{"day":"2026-08-03","actual":2,"target":3,"hit":false},{"day":"2026-08-04","actual":2,"target":3,"hit":false},{"day":"2026-08-05","actual":3,"target":3,"hit":true},{"day":"2026-08-06","actual":3,"target":3,"hit":true},{"day":"2026-08-08","actual":4,"target":3,"hit":true},{"day":"2026-08-09","actual":3,"target":3,"hit":true},{"day":"2026-08-10","actual":3,"target":3,"hit":true},{"day":"2026-08-11","actual":3,"target":3,"hit":true},{"day":"2026-08-12","actual":3,"target":3,"hit":true},{"day":"2026-08-13","actual":3,"target":3,"hit":true}]},{"name":"Abdul Nazar Jabbar Jabbar","daysWorked":10,"ap":26,"sc":0,"actual":26,"expected":30,"avg":2.6,"onTarget":6,"below":4,"hitPct":60,"shape":"WATCH","daily":[{"day":"2026-08-01","actual":2,"target":3,"hit":false},{"day":"2026-08-02","actual":2,"target":3,"hit":false},{"day":"2026-08-03","actual":null,"target":null,"hit":null},{"day":"2026-08-04","actual":null,"target":null,"hit":null},{"day":"2026-08-05","actual":2,"target":3,"hit":false},{"day":"2026-08-06","actual":1,"target":3,"hit":false},{"day":"2026-08-08","actual":4,"target":3,"hit":true},{"day":"2026-08-09","actual":3,"target":3,"hit":true},{"day":"2026-08-10","actual":3,"target":3,"hit":true},{"day":"2026-08-11","actual":3,"target":3,"hit":true},{"day":"2026-08-12","actual":3,"target":3,"hit":true},{"day":"2026-08-13","actual":3,"target":3,"hit":true}]},{"name":"Eldo Chundattu Varghese","daysWorked":12,"ap":25,"sc":6,"actual":31,"expected":38,"avg":2.6,"onTarget":7,"below":5,"hitPct":58,"shape":"WATCH","daily":[{"day":"2026-08-01","actual":3,"target":3,"hit":true},{"day":"2026-08-02","actual":3,"target":3,"hit":true},{"day":"2026-08-03","actual":2,"target":3,"hit":false},{"day":"2026-08-04","actual":1,"target":3,"hit":false},{"day":"2026-08-05","actual":1,"target":3,"hit":false},{"day":"2026-08-06","actual":1,"target":3,"hit":false},{"day":"2026-08-08","actual":5,"target":5,"hit":true},{"day":"2026-08-09","actual":2,"target":3,"hit":false},{"day":"2026-08-10","actual":3,"target":3,"hit":true},{"day":"2026-08-11","actual":4,"target":3,"hit":true},{"day":"2026-08-12","actual":3,"target":3,"hit":true},{"day":"2026-08-13","actual":3,"target":3,"hit":true}]}],"below":[{"fme":"Abdul Nazar Jabbar Jabbar","day":"2026-08-01","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Abdul Nazar Jabbar Jabbar","day":"2026-08-02","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Abdul Nazar Jabbar Jabbar","day":"2026-08-05","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Abdul Nazar Jabbar Jabbar","day":"2026-08-06","mode":"Active+Passive","actual":1,"target":3,"ap":1,"sc":0},{"fme":"Eldo Chundattu Varghese","day":"2026-08-03","mode":"Active+Passive","actual":2,"target":3,"ap":1,"sc":1},{"fme":"Eldo Chundattu Varghese","day":"2026-08-04","mode":"Active+Passive","actual":1,"target":3,"ap":1,"sc":0},{"fme":"Eldo Chundattu Varghese","day":"2026-08-05","mode":"Active+Passive","actual":1,"target":3,"ap":1,"sc":0},{"fme":"Eldo Chundattu Varghese","day":"2026-08-06","mode":"Active+Passive","actual":1,"target":3,"ap":1,"sc":0},{"fme":"Eldo Chundattu Varghese","day":"2026-08-09","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Mohammed Javeed Shaik","day":"2026-08-12","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Nabijohn Piyarjan Piyarjan","day":"2026-08-01","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Nabijohn Piyarjan Piyarjan","day":"2026-08-02","mode":"Active+Passive","actual":1,"target":3,"ap":1,"sc":0},{"fme":"Nabijohn Piyarjan Piyarjan","day":"2026-08-03","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Nabijohn Piyarjan Piyarjan","day":"2026-08-04","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Peter Kunnath M K Mathai","day":"2026-08-05","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Peter Kunnath M K Mathai","day":"2026-08-06","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Saji Joseph","day":"2026-08-04","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0}],"exceptions":[{"reason":"Duplicate Active+Passive visit later week/site (ignored)","siteId":"2943","day":"2026-08-09","week":"2026-08-09","subcat":"Active+Passive pair","taskId":"PM-20260808-00000164 / PM-20260808-00000154","fme":"Eldo Chundattu Varghese"},{"reason":"Duplicate Small Cell for same site (ignored)","siteId":"3423","day":"2026-08-06","week":"2026-08-02","subcat":"OGK Active Small Cell /Book RRU/Easy Macro","taskId":"PM-20260805-00000141","fme":"Eldo Chundattu Varghese"}],"rules":["PM only - OGK Active and Passive Routine Maintenance","Active + Passive, same site, same week (Sun-Sat) = 1 task","Small Cell = 1 task by itself","NTE FME accounts only","Mohd Yasin counted under Nabijohn (replacement)","Daily target: 3 paired tasks, or 5 if Small Cell only","Friday is not a working day"]};
+    const PIN = "4221";
+
+    function shortName(n) {
+      const p = String(n || "").split(/\s+/);
+      if (/^(mohammed|mohd|muhammad)$/i.test(p[0]) && p[1]) return p[1];
+      if (/^nabijohn$/i.test(p[0])) return "Nabi";
+      return p[0] || n;
+    }
+    function dayLabel(iso) {
+      return new Date(iso + "T00:00:00").getDate();
+    }
+    function colorOf(shape) {
+      return shape === "GOOD" ? "var(--good)" : shape === "WATCH" ? "var(--watch)" : "var(--bad)";
+    }
+    function cellClass(c) {
+      if (!c || c.actual == null) return "empty";
+      return c.hit ? "hit" : "miss";
+    }
+    function unlock() {
+      const box = document.getElementById("pin");
+      if (box.value === PIN) {
+        sessionStorage.setItem("pmh1pin", PIN);
+        document.getElementById("lock").style.display = "none";
+        render();
+      }
+    }
+
+    function render() {
+      const k = DATA.kpis;
+      const shape = document.getElementById("shape");
+      shape.className = "shape " + k.shape;
+      shape.textContent = k.shape + "  ·  " + k.hitPct + "% days on target";
+
+      const r = 38, circ = 2 * Math.PI * r, dash = (k.hitPct / 100) * circ;
+      document.getElementById("ring").innerHTML =
+        '<svg viewBox="0 0 100 100" class="ring"><circle cx="50" cy="50" r="' + r +
+        '" fill="none" stroke="#1e2940" stroke-width="10"/><circle cx="50" cy="50" r="' + r +
+        '" fill="none" stroke="' + colorOf(k.shape) + '" stroke-width="10" stroke-linecap="round" stroke-dasharray="' +
+        dash.toFixed(1) + " " + circ.toFixed(1) +
+        '" transform="rotate(-90 50 50)"/><text x="50" y="48" text-anchor="middle" fill="#f4f7fb" font-size="22" font-weight="700">' +
+        k.hitPct + '%</text><text x="50" y="64" text-anchor="middle" fill="#93a0b8" font-size="8">ON TARGET</text></svg>';
+
+      document.getElementById("heroStats").innerHTML =
+        "<div><b>" + k.onTarget + " / " + k.fmeDays + "</b><br>FME-days on target</div>" +
+        "<div><b>" + k.actual + " / " + k.expected + "</b><br>Tasks vs expected</div>" +
+        "<div><b>" + k.below + "</b><br>Days below target</div>";
+
+      document.getElementById("kpis").innerHTML = [
+        [k.tasks, "Tasks completed"],
+        [k.sites, "Work sites"],
+        [k.fmes, "NTE FMEs"],
+        [k.pairs + " + " + k.smallCell, "Pairs + Small Cell"]
+      ].map(function (x) {
+        return '<div class="kpi"><b>' + x[0] + "</b><span>" + x[1] + "</span></div>";
+      }).join("");
+
+      const fmeN = DATA.fme.length || 1;
+      document.getElementById("trend").innerHTML = DATA.days.map(function (day) {
+        let hit = 0, miss = 0;
+        DATA.fme.forEach(function (f) {
+          const c = f.daily.filter(function (d) { return d.day === day; })[0];
+          if (c && c.actual != null) { if (c.hit) hit += 1; else miss += 1; }
+        });
+        const ht = Math.round((hit / fmeN) * 100);
+        const mt = Math.round((miss / fmeN) * 100);
+        return '<div class="tcol"><div class="tstack"><div class="m" style="height:' + mt +
+          '%"></div><div class="h" style="height:' + ht + '%"></div></div><div class="n">' +
+          dayLabel(day) + "</div></div>";
+      }).join("");
+
+      const heat = document.getElementById("heat");
+      heat.style.setProperty("--ndays", String(DATA.days.length));
+      let heatHtml = '<div></div>' + DATA.days.map(function (d) {
+        return '<div class="hd">' + dayLabel(d) + "</div>";
+      }).join("");
+      DATA.fme.forEach(function (f) {
+        heatHtml += '<div class="lab">' + shortName(f.name) + "</div>";
+        f.daily.forEach(function (c) {
+          const title = shortName(f.name) + " · " + c.day + (c.actual == null ? " · off" : " · " + c.actual + "/" + c.target);
+          heatHtml += '<button type="button" class="cell ' + cellClass(c) + '" data-tip="' + title + '"></button>';
+        });
+      });
+      heat.innerHTML = heatHtml;
+      heat.onclick = function (e) {
+        const btn = e.target.closest(".cell");
+        if (btn) document.getElementById("heatTip").textContent = btn.getAttribute("data-tip");
+      };
+
+      document.getElementById("fmes").innerHTML = DATA.fme.map(function (f, i) {
+        const color = colorOf(f.shape);
+        const spark = f.daily.map(function (c) {
+          return '<b class="' + cellClass(c) + '"></b>';
+        }).join("");
+        const chips = f.daily.map(function (c) {
+          if (c.actual == null) return '<div class="chip empty"><b>-</b>' + dayLabel(c.day) + "</div>";
+          return '<div class="chip ' + (c.hit ? "hit" : "miss") + '"><b>' + c.actual + "/" + c.target + "</b>" + dayLabel(c.day) + "</div>";
+        }).join("");
+        return '<div class="fme" data-i="' + i + '"><div class="fme-top"><div><div class="name">' + f.name +
+          '</div><div class="meta">' + f.actual + " / " + f.expected + " tasks · avg " + f.avg +
+          " · " + f.onTarget + "/" + f.daysWorked + " days</div></div><div class='shape " + f.shape + "'>" + f.shape +
+          "</div></div><div class='bar'><i style='width:" + f.hitPct + "%;background:" + color +
+          "'></i></div><div class='spark'>" + spark + "</div><div class='days'>" + chips + "</div></div>";
+      }).join("");
+
+      document.getElementById("fmes").onclick = function (e) {
+        const card = e.target.closest(".fme");
+        if (card) card.classList.toggle("open");
+      };
+
+      const below = DATA.below || [];
+      document.getElementById("below").innerHTML = below.length ? below.map(function (b) {
+        return '<div class="row"><div>' + b.fme + '<div class="muted">' + b.day + " · " + b.mode +
+          "</div></div><b>" + b.actual + " / " + b.target + "</b></div>";
+      }).join("") : '<div class="muted">None</div>';
+
+      const ex = DATA.exceptions || [];
+      document.getElementById("ex").innerHTML = ex.length ? ex.map(function (x) {
+        return '<div class="row"><div>' + x.siteId + '<div class="muted">' + x.day + " · " + x.reason +
+          "</div></div></div>";
+      }).join("") : '<div class="muted">None</div>';
+
+      document.getElementById("foot").innerHTML =
+        "Updated " + DATA.generatedAt + " from " + DATA.sourceFile +
+        ". Pairing: same site, same week. NTE only. Mohd counted under Nabi. Source: " + DATA.owsUrl;
+    }
+
+    if (!PIN) {
+      render();
+    } else if (sessionStorage.getItem("pmh1pin") === PIN) {
+      render();
+    } else {
+      document.getElementById("lock").style.display = "block";
+      document.getElementById("pin").addEventListener("keydown", function (e) {
+        if (e.key === "Enter") unlock();
+      });
+      document.getElementById("pinGo").addEventListener("click", unlock);
+    }
+  </script>
+</body>
+</html>

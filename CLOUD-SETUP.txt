@@ -1,0 +1,21 @@
+SHORTCUTS
+
+Phone URL (already live):
+https://ansrkian-gif.github.io/pm-h1-2027/
+PIN 4221
+
+Fully automatic extract (PC off):
+1. Open https://github.com/ansrkian-gif/pm-h1-2027/settings/secrets/actions
+2. New secret: OWS_USER  = your TeleOWS login
+3. New secret: OWS_PASS  = your TeleOWS password
+4. Actions -> Daily PM H1 dashboard -> Run workflow (test once)
+After that it runs every day 06:30 Kuwait by itself.
+
+Do not put the OWS password in this folder or in chat.
+
+OWS robot path:
+Login -> Query Task(Ooredoo)
+Task Type PM, status closed + completed
+Task Id/Title/Site/FME = _OGK Active and Passive
+Completion Time Form = 2026-08-01 00:00:00
+Search -> Export
