@@ -41,7 +41,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ows-debug
-          path: cloud/*.png
+          path: |
+            cloud/*.png
+            cloud/*.txt
           if-no-files-found: ignore
       - name: Publish phone page
         if: success()
