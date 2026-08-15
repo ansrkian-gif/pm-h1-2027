@@ -110,23 +110,17 @@ async function clickListItem(page, want) {
   return false;
 }
 
-async function hideExtPopups(target) {
+async function hideDatePickers(target) {
   await target
     .evaluate(() => {
-      try {
-        if (window.Ext && Ext.menu && Ext.menu.MenuMgr) Ext.menu.MenuMgr.hideAll();
-      } catch {}
-      try {
-        if (window.Ext && Ext.WindowMgr) Ext.WindowMgr.hideAll();
-      } catch {}
-      document.querySelectorAll(".x-date-picker, .x-datetime-picker, .x-combo-list").forEach((el) => {
+      document.querySelectorAll(".x-date-picker, .x-datetime-picker").forEach((el) => {
         el.style.display = "none";
         el.style.visibility = "hidden";
       });
       document.querySelectorAll(".x-layer").forEach((el) => {
         const t = el.innerText || "";
         if (/Current Page/.test(t)) return;
-        if (/Clear|Update|NPM|\bPM\b|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/.test(t)) {
+        if (/Clear/.test(t) && /Update/.test(t)) {
           el.style.display = "none";
           el.style.visibility = "hidden";
         }
@@ -136,12 +130,8 @@ async function hideExtPopups(target) {
 }
 
 async function closeOverlays(page, ows) {
-  if (ows) await hideExtPopups(ows);
-  for (const f of page.frames()) await hideExtPopups(f);
-  for (let i = 0; i < 2; i++) {
-    await page.keyboard.press("Escape").catch(() => {});
-    await page.waitForTimeout(120);
-  }
+  if (ows) await hideDatePickers(ows);
+  for (const f of page.frames()) await hideDatePickers(f);
 }
 
 async function clickMatching(page, pattern) {
@@ -203,6 +193,9 @@ async function clickExportAll(page) {
           return r.width >= 8 && r.height >= 8 && r.width < 320 && r.height < 48;
         });
         if (!el) return "";
+        el.dispatchEvent(
+          new MouseEvent("click", { bubbles: true, cancelable: true, view: window, buttons: 1 })
+        );
         el.click();
         return String(el.className || "ok").slice(0, 80);
       })
@@ -225,6 +218,67 @@ async function clickExportAll(page) {
     }
   }
   return false;
+}
+
+async function openExportMenu(ows, page) {
+  const text = ows.locator(".sdm_splitbutton_text").filter({ hasText: /^Export$/ }).first();
+  if ((await text.count().catch(() => 0)) > 0) {
+    await text.click({ timeout: 8000 });
+    console.log("export playwright text");
+    await page.waitForTimeout(500);
+    if (await clickExportAll(page)) return "all-after-text";
+  }
+
+  const split = ows.locator(".sdm_splitbutton").filter({ hasText: /Export/ }).first();
+  const box = await split.boundingBox().catch(() => null);
+  if (box) {
+    await page.mouse.click(box.x + Math.max(8, box.width - 6), box.y + box.height / 2);
+    console.log("export mouse arrow", Math.round(box.x), Math.round(box.width));
+    await page.waitForTimeout(500);
+    await dumpLayers(page, "layers post-arrow");
+    if (await clickExportAll(page)) return "all-after-arrow";
+  }
+
+  const ext = await ows.evaluate(() => {
+    const fire = (el, xOff) => {
+      const r = el.getBoundingClientRect();
+      const x = r.left + (xOff != null ? xOff : r.width / 2);
+      const y = r.top + r.height / 2;
+      for (const type of ["mouseover", "mousedown", "mouseup", "click"]) {
+        el.dispatchEvent(
+          new MouseEvent(type, { bubbles: true, cancelable: true, view: window, clientX: x, clientY: y, buttons: 1 })
+        );
+      }
+    };
+    const row = [...document.querySelectorAll(".toolbar_each")].find((el) => (el.innerText || "").trim() === "Export");
+    if (!row) return "no-row";
+    const btnText = row.querySelector(".sdm_splitbutton_text");
+    const splitBtn = row.querySelector(".sdm_splitbutton");
+    if (btnText) fire(btnText);
+    if (splitBtn) fire(splitBtn, splitBtn.getBoundingClientRect().width - 4);
+    let found = "dom";
+    try {
+      if (window.Ext && Ext.ComponentMgr && Ext.ComponentMgr.all) {
+        Ext.ComponentMgr.all.each((c) => {
+          const t = (c.getText && c.getText()) || c.text || "";
+          if (String(t).trim() !== "Export") return;
+          found = "ext:" + ((c.getXType && c.getXType()) || "btn");
+          if (c.showMenu) c.showMenu();
+          else if (c.menu && c.menu.show && c.el) c.menu.show(c.el);
+          else if (c.fireEvent) c.fireEvent("click", c);
+          else if (c.handler) c.handler.call(c.scope || c, c);
+        });
+      }
+    } catch (e) {
+      found += ":" + e.message;
+    }
+    return found;
+  });
+  console.log("export ext", ext);
+  await page.waitForTimeout(600);
+  await dumpLayers(page, "layers post-ext");
+  if (await clickExportAll(page)) return "all-after-ext";
+  return "";
 }
 
 async function fillNearLabel(page, label, value) {
@@ -450,6 +504,7 @@ try {
       const cd = headers["content-disposition"] || "";
       const ct = headers["content-type"] || "";
       const url = res.url();
+      if (/checkAlive|updateTGT/.test(url)) return;
       if (/\.(js|css|png|gif|jpg|woff|svg)(\?|$)/i.test(url) || /javascript|css|image|font/.test(ct)) return;
       if (cd || /xlsx|excel|octet-stream|spreadsheet|export|download/i.test(ct + url + cd)) {
         console.log("net-file", res.status(), ct.slice(0, 60), cd.slice(0, 80), url.slice(0, 180));
@@ -472,38 +527,16 @@ try {
   };
   context.on("response", onRes);
 
-  const downloadPromise = page.waitForEvent("download", { timeout: 180000 }).catch(() => null);
-  const popupPromise = page.waitForEvent("popup", { timeout: 25000 }).catch(() => null);
+  const downloadPromise = page.waitForEvent("download", { timeout: 90000 }).catch(() => null);
+  const popupPromise = page.waitForEvent("popup", { timeout: 20000 }).catch(() => null);
 
-  await closeOverlays(page, ows);
   await dumpLayers(page, "layers pre-export");
-  const exported = await owsEval(() => {
-    const row = [...document.querySelectorAll(".toolbar_each")].find((el) => (el.innerText || "").trim() === "Export");
-    if (!row) return "no-export";
-    const input = row.querySelector(".toolbar_each_input");
-    const btn = row.querySelector(".sdm_splitbutton_text, button, .sdm_button");
-    if (input) input.click();
-    else if (btn) btn.click();
-    else return "no-btn";
-    return "ok";
-  });
-  console.log("export click", exported);
-  if (exported !== "ok") throw new Error("Export button not found");
-  await page.waitForTimeout(800);
-  await dumpLayers(page, "layers post-export");
+  const exported = await openExportMenu(ows, page);
+  console.log("export menu", exported);
   await shot(page, "05-export-menu.png");
-  let allClicked = await clickExportAll(page);
-  if (!allClicked) {
-    await owsEval(() => {
-      const row = [...document.querySelectorAll(".toolbar_each")].find((el) => (el.innerText || "").trim() === "Export");
-      const arrow = row && row.querySelector(".sdm_splitbutton_arrow, .x-btn-split-right, em, .sdm_splitbutton i");
-      if (arrow) arrow.click();
-    });
-    await page.waitForTimeout(600);
-    await dumpLayers(page, "layers post-arrow");
-    allClicked = await clickExportAll(page);
+  if (!exported) {
+    await dumpLayers(page, "layers no-all");
   }
-  console.log("export all clicked", allClicked);
   await shot(page, "06-after-export-all.png");
 
   let download = await downloadPromise;
