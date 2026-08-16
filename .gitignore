@@ -8,3 +8,10 @@ tools/
 *.xlsx
 ~$*
 dashboard/.pin-local.txt
+dashboard/pin.js
+dashboard/dashboard-data.js
+dashboard/alert-data.js
+dashboard/pairing-index.html
+dashboard/nte-index.html
+alert_config.json
+publish_config.json

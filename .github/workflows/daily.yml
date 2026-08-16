@@ -50,12 +50,19 @@ jobs:
           OWS_FROM: "2026-08-01 00:00:00"
           OWS_SEARCH: "_OGK Active and Passive"
         run: node fetch-ows.mjs
-      - name: Build dashboard
-        working-directory: cloud
+      - name: Build NTE dashboard and ntfy
         env:
+          EXTRACT_PATH: ${{ github.workspace }}/cloud/extract.xlsx
           DASHBOARD_PIN: ${{ secrets.DASHBOARD_PIN }}
-          OWS_URL: ${{ secrets.OWS_URL }}
-        run: node process.mjs
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_URL: ${{ secrets.NTFY_URL }}
+          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
+          PAGES_URL: https://ansrkian-gif.github.io/pm-h1-2027
+        run: |
+          python3 -m pip install --user openpyxl
+          python3 scripts/extract_data.py
+          python3 -c "import json,os; open('dashboard/pin.js','w',encoding='utf-8').write('window.DASHBOARD_PIN=' + json.dumps(os.environ.get('DASHBOARD_PIN','')) + ';\n')"
+          python3 scripts/daily_alert.py
       - name: Upload OWS screenshots if pull failed
         if: failure()
         uses: actions/upload-artifact@v4
@@ -73,36 +80,11 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git clone --branch gh-pages --single-branch "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" _site
-          cp dashboard/index.html _site/index.html
-          cp dashboard/manifest.json _site/manifest.json
+          cp dashboard/index.html dashboard/alert.html dashboard/sw.js dashboard/pin-gate.js dashboard/manifest.webmanifest _site/
+          cp dashboard/dashboard-data.js dashboard/alert-data.js dashboard/pin.js _site/
           touch _site/.nojekyll
           cd _site
-          git add index.html manifest.json .nojekyll
+          git add index.html alert.html sw.js pin-gate.js pin.js manifest.webmanifest dashboard-data.js alert-data.js .nojekyll
           git diff --cached --quiet && echo "No page changes" && exit 0
           git commit -m "Daily OWS dashboard refresh"
           git push
-      - name: ntfy phone popup
-        if: success()
-        env:
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
-          NTFY_URL: ${{ secrets.NTFY_URL }}
-          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
-        run: |
-          if [ -z "$NTFY_TOPIC" ]; then
-            echo "NTFY_TOPIC secret not set; skip popup"
-            exit 0
-          fi
-          BASE="${NTFY_URL:-https://ntfy.sh}"
-          BASE="${BASE%/}"
-          PRI="default"
-          if [ -f dashboard/ntfy.priority ]; then PRI=$(tr -d '\r\n' < dashboard/ntfy.priority); fi
-          AUTH=()
-          if [ -n "$NTFY_TOKEN" ]; then AUTH=(-H "Authorization: Bearer ${NTFY_TOKEN}"); fi
-          curl -fsS --max-time 20 \
-            -H "Title: PM H1 today" \
-            -H "Click: https://ansrkian-gif.github.io/pm-h1-2027/" \
-            -H "Tags: bar_chart" \
-            -H "Priority: ${PRI}" \
-            "${AUTH[@]}" \
-            -d "$(cat dashboard/ntfy.txt)" \
-            "${BASE}/${NTFY_TOPIC}"

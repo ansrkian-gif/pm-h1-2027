@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#7f1d1d" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>PM NTE Alert</title>
+  <script src="pin.js"></script>
+  <script src="pin-gate.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@600;700;800&family=IBM+Plex+Mono:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ok: #14532d;
+      --ok-fg: #ecfdf5;
+      --bad: #7f1d1d;
+      --bad-fg: #fef2f2;
+      --off: #334155;
+      --off-fg: #f8fafc;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      min-height: 100dvh;
+      font-family: "DM Sans", system-ui, sans-serif;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
+               max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+      color: var(--bad-fg);
+      background: var(--bad);
+    }
+    body.ok { background: var(--ok); color: var(--ok-fg); }
+    body.off { background: var(--off); color: var(--off-fg); }
+    body.cleared {
+      background: #0f172a;
+      color: #94a3b8;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .eyebrow {
+      font-size: clamp(0.85rem, 3.2vw, 1.1rem);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-weight: 700;
+      opacity: 0.85;
+    }
+    .status {
+      margin: 0.4rem 0 0.2rem;
+      font-size: clamp(2.4rem, 13vw, 4.8rem);
+      line-height: 0.95;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      word-break: break-word;
+    }
+    .date {
+      font-size: clamp(1.05rem, 4.2vw, 1.45rem);
+      font-weight: 700;
+      opacity: 0.9;
+      margin-bottom: 1.1rem;
+    }
+    .score {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: clamp(3.2rem, 18vw, 6rem);
+      font-weight: 700;
+      line-height: 1;
+      margin: 0.4rem 0;
+    }
+    .score span {
+      font-size: 0.45em;
+      opacity: 0.8;
+    }
+    .result {
+      font-size: clamp(1.25rem, 5.5vw, 1.9rem);
+      font-weight: 700;
+      margin: 0.35rem 0 1.25rem;
+    }
+    h2 {
+      margin: 0 0 0.55rem;
+      font-size: clamp(1.15rem, 4.8vw, 1.6rem);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 1rem;
+      display: grid;
+      gap: 0.55rem;
+    }
+    li {
+      font-size: clamp(1.2rem, 5.5vw, 1.85rem);
+      font-weight: 700;
+      padding: 0.7rem 0.85rem;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.14);
+      line-height: 1.2;
+    }
+    .ok-list li { background: rgba(255,255,255,0.12); font-size: clamp(1rem, 4.2vw, 1.35rem); }
+    .grow { flex: 1; }
+
+    .actions {
+      display: grid;
+      gap: 0.65rem;
+      margin-top: 1rem;
+      position: sticky;
+      bottom: 0;
+      padding-top: 0.5rem;
+    }
+    button, a.btn {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 1rem 1.1rem;
+      font-size: clamp(1.05rem, 4.5vw, 1.35rem);
+      font-weight: 800;
+      font-family: inherit;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    #clearBtn {
+      background: #fff;
+      color: #111;
+    }
+    a.btn {
+      background: rgba(255,255,255,0.18);
+      color: inherit;
+    }
+    .cleared h1 {
+      font-size: clamp(1.8rem, 8vw, 2.6rem);
+      margin: 0 0 0.6rem;
+      color: #e2e8f0;
+    }
+    .cleared p { font-size: 1.05rem; margin: 0 0 1.2rem; }
+  </style>
+</head>
+<body>
+  <div id="app">Loading alert…</div>
+  <script src="alert-data.js"></script>
+  <script>
+    (function () {
+      const data = window.ALERT_DATA;
+      const app = document.getElementById("app");
+      if (!data) {
+        app.textContent = "No alert data yet.";
+        return;
+      }
+
+      const dismissKey = "pm-nte-alert-dismissed";
+      const lastId = localStorage.getItem(dismissKey);
+      if (lastId && lastId === data.id) {
+        document.body.className = "cleared";
+        app.innerHTML =
+          "<h1>Alert cleared</h1>" +
+          "<p>This alert will stay cleared until the next update.</p>" +
+          '<div class="actions"><a class="btn" href="./">Open dashboard</a>' +
+          '<button type="button" id="showAgain">Show again</button></div>';
+        document.getElementById("showAgain").onclick = function () {
+          localStorage.removeItem(dismissKey);
+          location.reload();
+        };
+        return;
+      }
+
+      const friday = !!data.friday;
+      const achieved = !!data.achieved;
+      document.body.className = friday ? "off" : (achieved ? "ok" : "");
+      document.querySelector('meta[name="theme-color"]').setAttribute(
+        "content",
+        friday ? "#334155" : (achieved ? "#14532d" : "#7f1d1d")
+      );
+
+      const status = friday ? "FRIDAY OFF" : (achieved ? "TARGET MET" : "BEHIND TARGET");
+      const result = friday
+        ? "No WO target today"
+        : (achieved ? "Daily target achieved" : ("Short by " + Math.max(0, (data.target || 0) - (data.closed || 0)) + " WOs"));
+
+      const behind = Array.isArray(data.behind) ? data.behind : [];
+      const onTrack = Array.isArray(data.on_track) ? data.on_track : [];
+
+      let fmeHtml = "";
+      if (!friday) {
+        if (behind.length) {
+          fmeHtml += "<h2>FMEs behind</h2><ul>" + behind.map(function (x) {
+            return "<li>" + escapeHtml(x) + "</li>";
+          }).join("") + "</ul>";
+        } else {
+          fmeHtml += "<h2>FMEs</h2><ul class='ok-list'><li>All FMEs met daily target</li></ul>";
+        }
+        if (onTrack.length) {
+          fmeHtml += "<h2>On track</h2><ul class='ok-list'>" + onTrack.map(function (x) {
+            return "<li>" + escapeHtml(x) + "</li>";
+          }).join("") + "</ul>";
+        }
+      }
+
+      const incompleteN = Number(data.incompletePairCount || 0);
+      const smallSites = Number(data.smallCellSiteCount || 0);
+      const smallWos = Number(data.smallCellWoCount || 0);
+      const pairSites = Array.isArray(data.incompletePairSites) ? data.incompletePairSites : [];
+      let siteHtml =
+        "<h2>Site integrity</h2><ul>" +
+        "<li>Incomplete Active/Passive pairs: <strong>" + incompleteN + "</strong></li>" +
+        "<li>Small Cell sites: <strong>" + smallSites + "</strong> (WOs " + smallWos + ")</li>" +
+        "<li>Exempted WOs: <strong>" + Number(data.exemptedWoCount || 0) + "</strong></li>" +
+        "<li>Exempted common Site IDs: <strong>" + Number(data.exemptedSiteIdCount || 0) + "</strong></li>" +
+        "</ul>";
+      if (incompleteN && pairSites.length) {
+        siteHtml += "<h2>Missing pair Site IDs</h2><ul>" + pairSites.map(function (row) {
+          const miss = (row.missing || []).map(function (m) {
+            if (m.indexOf("Passive") >= 0) return "Passive";
+            if (m.indexOf("Active") >= 0 && m.indexOf("Small") < 0) return "Active";
+            return m;
+          }).join("/");
+          return "<li>" + escapeHtml(String(row.siteId || "")) + " · miss " + escapeHtml(miss) + "</li>";
+        }).join("") + "</ul>";
+      }
+
+      app.innerHTML =
+        '<div class="eyebrow">PM NTE Daily Alert</div>' +
+        '<div class="status">' + status + "</div>" +
+        '<div class="date">' + escapeHtml(data.dayName || data.date || "") + "</div>" +
+        (friday ? "" : '<div class="score">' + (data.closed || 0) + "<span> / " + (data.target || 21) + "</span></div>") +
+        '<div class="result">' + escapeHtml(result) + "</div>" +
+        '<div class="grow">' + fmeHtml + siteHtml + "</div>" +
+        '<div class="actions">' +
+          '<button type="button" id="clearBtn">CLEAR ALERT</button>' +
+          '<a class="btn" href="./">Open full dashboard</a>' +
+        "</div>";
+
+      document.getElementById("clearBtn").onclick = function () {
+        localStorage.setItem(dismissKey, data.id);
+        if (navigator.vibrate) navigator.vibrate(40);
+        location.reload();
+      };
+
+      // Keep screen awake while alert is open (supported browsers)
+      if (navigator.wakeLock && navigator.wakeLock.request) {
+        navigator.wakeLock.request("screen").catch(function () {});
+      }
+      if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+    })();
+  </script>
+</body>
+</html>
