@@ -6,6 +6,8 @@ on:
     - cron: "0 15 * * *"
   issues:
     types: [opened]
+  issue_comment:
+    types: [created]
 
 permissions:
   contents: write
@@ -13,11 +15,20 @@ permissions:
 
 jobs:
   refresh:
-    if: github.event_name != 'issues' || (github.actor == 'ansrkian-gif' && contains(github.event.issue.title, 'refresh'))
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      (
+        (github.actor == 'ansrkian-gif' || github.actor == 'aashiqsadiq-blip') &&
+        (
+          (github.event_name == 'issues' && contains(github.event.issue.title, 'refresh')) ||
+          (github.event_name == 'issue_comment' && contains(github.event.comment.body, 'refresh'))
+        )
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Close refresh request
-        if: github.event_name == 'issues'
+        if: github.event_name == 'issues' || github.event_name == 'issue_comment'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh issue close ${{ github.event.issue.number }} --repo ${{ github.repository }} --comment "Refresh started. Reload the phone page in 2-4 minutes (PIN 4221)."
