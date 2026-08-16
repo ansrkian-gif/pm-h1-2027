@@ -1,340 +1,1264 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1220" />
+  <meta name="theme-color" content="#0f3d3e" />
+  <title>PM H1-2027 · NTE Field Dashboard</title>
+  <script src="pin.js"></script>
+  <script src="pin-gate.js"></script>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="PM H1" />
-  <title>PM H1 2027</title>
-  <link rel="manifest" href="manifest.json" />
+  <meta name="apple-mobile-web-app-title" content="PM NTE" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #0b1220;
-      --card: #141c2e;
-      --line: #243049;
-      --text: #f4f7fb;
-      --muted: #93a0b8;
-      --good: #3dd68c;
-      --watch: #f5b942;
-      --bad: #ff6b6b;
-      --accent: #4c8dff;
-      --pad: max(16px, env(safe-area-inset-left));
+      --bg: #f3f6f5;
+      --bg-accent: #e4eeeb;
+      --surface: #ffffff;
+      --ink: #142523;
+      --ink-soft: #4a5c5a;
+      --muted: #7a8c89;
+      --line: #d5e0dd;
+      --teal: #0f6b66;
+      --teal-deep: #0a4542;
+      --teal-soft: #d8ebe8;
+      --good: #1a7a4c;
+      --good-bg: #e6f5ec;
+      --warn: #b45309;
+      --warn-bg: #fff3e0;
+      --bad: #b42318;
+      --bad-bg: #fdecea;
+      --ahead: #0e7490;
+      --ahead-bg: #e0f4f8;
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(15, 61, 62, 0.06);
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+      --sans: "DM Sans", system-ui, sans-serif;
     }
+
     * { box-sizing: border-box; }
-    html, body {
+    html { scroll-behavior: smooth; }
+    body {
       margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      -webkit-text-size-adjust: 100%;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(900px 420px at 10% -10%, #cfe8e3 0%, transparent 55%),
+        radial-gradient(700px 380px at 100% 0%, #dce8f0 0%, transparent 50%),
+        linear-gradient(180deg, #eef4f2 0%, var(--bg) 40%, #eef2f1 100%);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
-    body { padding-bottom: calc(28px + env(safe-area-inset-bottom)); }
-    header {
-      position: sticky; top: 0; z-index: 5;
-      background: rgba(11,18,32,.92);
-      backdrop-filter: blur(12px);
-      padding: calc(12px + env(safe-area-inset-top)) var(--pad) 12px;
+
+    .wrap {
+      width: min(1120px, calc(100% - 1.5rem));
+      margin: 0 auto;
+      padding: 1.1rem 0 2.5rem;
+    }
+
+    header.app-header {
+      display: grid;
+      gap: 0.85rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: grid;
+      gap: 0.2rem;
+    }
+
+    .eyebrow {
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--teal);
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 4vw, 1.95rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      color: var(--teal-deep);
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 0.95rem;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .status-chip .dot {
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 20%, transparent);
+    }
+
+    .status-good { background: var(--good-bg); color: var(--good); border-color: #b7e0c7; }
+    .status-warn { background: var(--warn-bg); color: var(--warn); border-color: #f0d2a8; }
+    .status-bad { background: var(--bad-bg); color: var(--bad); border-color: #f3c0bb; }
+    .status-ahead { background: var(--ahead-bg); color: var(--ahead); border-color: #b6dfe8; }
+
+    .meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .meta-pill {
+      background: rgba(255,255,255,0.72);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
+      color: var(--ink-soft);
+    }
+
+    .meta-pill strong {
+      color: var(--teal-deep);
+      font-weight: 700;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.9rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 0.9rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1rem 1.05rem 1.1rem;
+    }
+
+    .card h2 {
+      margin: 0 0 0.85rem;
+      font-size: 0.95rem;
+      letter-spacing: -0.01em;
+      color: var(--teal-deep);
+    }
+
+    .card-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .card-head h2 { margin: 0; }
+    .card-head .hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .progress-card {
+      display: grid;
+      gap: 0.85rem;
+    }
+
+    .ring-wrap {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.9rem;
+      align-items: center;
+    }
+
+    .ring {
+      --p: 0;
+      --c: var(--teal);
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background:
+        radial-gradient(closest-side, #fff 72%, transparent 73% 100%),
+        conic-gradient(var(--c) calc(var(--p) * 1%), #e7eeec 0);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .ring span {
+      font-family: var(--mono);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--teal-deep);
+    }
+
+    .metrics { display: grid; gap: 0.25rem; }
+    .metrics .label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+    .metrics .value {
+      font-family: var(--mono);
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .metrics .sub {
+      font-size: 0.82rem;
+      color: var(--ink-soft);
+    }
+
+    .bar {
+      height: 8px;
+      background: #e8efed;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar > i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--teal), #1fa39a);
+      transition: width 0.6s ease;
+    }
+    .bar.over > i { background: linear-gradient(90deg, var(--ahead), #22b8cf); }
+    .bar.behind > i { background: linear-gradient(90deg, var(--warn), #e0892f); }
+    .bar.critical > i { background: linear-gradient(90deg, var(--bad), #e35b50); }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .kpi {
+      background: rgba(255,255,255,0.85);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 0.85rem 0.9rem;
+    }
+    .kpi .k { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; font-weight: 700; }
+    .kpi .v { font-family: var(--mono); font-size: 1.25rem; font-weight: 600; margin-top: 0.25rem; color: var(--teal-deep); }
+    .kpi .s { font-size: 0.78rem; color: var(--ink-soft); margin-top: 0.15rem; }
+
+    .chart {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(28px, 1fr);
+      gap: 0.35rem;
+      align-items: end;
+      height: 160px;
+      padding-top: 0.5rem;
+    }
+
+    .chart .col {
+      display: grid;
+      grid-template-rows: 1fr auto auto;
+      gap: 0.25rem;
+      height: 100%;
+      align-items: end;
+      min-width: 0;
+    }
+
+    .chart .stack {
+      height: 100%;
+      display: flex;
+      align-items: flex-end;
+      position: relative;
+    }
+
+    .chart .fill {
+      width: 100%;
+      border-radius: 8px 8px 4px 4px;
+      background: linear-gradient(180deg, #2bb3a8, var(--teal));
+      min-height: 3px;
+      position: relative;
+      transition: height 0.4s ease;
+    }
+
+    .chart .fill.behind { background: linear-gradient(180deg, #f0a35a, var(--warn)); }
+    .chart .fill.critical { background: linear-gradient(180deg, #f08078, var(--bad)); }
+    .chart .fill.ahead { background: linear-gradient(180deg, #4ec5d6, var(--ahead)); }
+    .chart .fill.off { background: #d8e0de; opacity: 0.55; }
+
+    .chart .target-line {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: repeating-linear-gradient(90deg, #94a3a1 0 3px, transparent 3px 6px);
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    .chart .day {
+      font-size: 0.62rem;
+      text-align: center;
+      color: var(--muted);
+      line-height: 1.1;
+    }
+    .chart .cnt {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      text-align: center;
+      color: var(--ink-soft);
+      font-weight: 600;
+    }
+
+    .fme-list { display: grid; gap: 0.65rem; }
+
+    .fme-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.35rem 0.75rem;
+      padding: 0.7rem 0.75rem;
+      border-radius: 12px;
+      background: #f7faf9;
+      border: 1px solid #e6eeeb;
+    }
+
+    .fme-name {
+      font-weight: 700;
+      color: var(--teal-deep);
+      font-size: 0.92rem;
+    }
+    .fme-id {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-family: var(--mono);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+    .fme-stats {
+      text-align: right;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .fme-badge {
+      justify-self: end;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.18rem 0.45rem;
+      border-radius: 999px;
+    }
+    .fme-row .bar { grid-column: 1 / -1; margin-top: 0.15rem; }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-top: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--ink-soft);
+    }
+    .legend span::before {
+      content: "";
+      display: inline-block;
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 2px;
+      margin-right: 0.35rem;
+      vertical-align: -1px;
+    }
+    .lg-good::before { background: var(--teal); }
+    .lg-behind::before { background: var(--warn); }
+    .lg-off::before { background: #d8e0de; }
+    .lg-target::before { background: linear-gradient(90deg, #94a3a1, #94a3a1); height: 2px; vertical-align: 2px; }
+
+    .month-grid {
+      display: grid;
+      gap: 0.55rem;
+    }
+    .month-row {
+      display: grid;
+      grid-template-columns: 4.5rem 1fr auto;
+      gap: 0.6rem;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+    .month-row .name { font-weight: 600; color: var(--teal-deep); }
+    .month-row .nums {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--ink-soft);
+      white-space: nowrap;
+    }
+
+    .site-stat {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.55rem;
+      margin-bottom: 0.85rem;
+    }
+    .site-stat .box {
+      background: #f7faf9;
+      border: 1px solid #e6eeeb;
+      border-radius: 12px;
+      padding: 0.7rem 0.75rem;
+    }
+    .site-stat .box.warn {
+      background: var(--warn-bg);
+      border-color: #f0d2a8;
+    }
+    .site-stat .box.bad {
+      background: var(--bad-bg);
+      border-color: #f3c0bb;
+    }
+    .site-stat .box.good {
+      background: var(--good-bg);
+      border-color: #b7e0c7;
+    }
+    .site-stat .k {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .site-stat .v {
+      font-family: var(--mono);
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-top: 0.15rem;
+      color: var(--teal-deep);
+    }
+    .site-stat .box.bad .v, .site-stat .box.warn .v { color: inherit; }
+    .chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.35rem;
+    }
+    .chip {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.28rem 0.5rem;
+      border-radius: 999px;
+      background: #eef4f2;
+      color: var(--teal-deep);
+      border: 1px solid var(--line);
+    }
+    .chip.bad {
+      background: var(--bad-bg);
+      color: var(--bad);
+      border-color: #f3c0bb;
+    }
+    .chip.warn {
+      background: var(--warn-bg);
+      color: var(--warn);
+      border-color: #f0d2a8;
+    }
+    .rule-note {
+      font-size: 0.78rem;
+      color: var(--ink-soft);
+      line-height: 1.4;
+      margin: 0 0 0.75rem;
+    }
+
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      min-width: 520px;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.55rem 0.45rem;
       border-bottom: 1px solid var(--line);
     }
-    .kicker { color: var(--muted); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
-    h1 { font-size: 22px; margin: 4px 0 0; font-weight: 700; }
-    main { padding: 16px var(--pad) 0; max-width: 560px; margin: 0 auto; }
-    .shape {
-      display: inline-flex; align-items: center; gap: 8px;
-      margin-top: 10px; padding: 6px 10px; border-radius: 999px;
-      font-size: 12px; font-weight: 700;
+    th {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      font-weight: 700;
     }
-    .shape.GOOD { background: rgba(61,214,140,.15); color: var(--good); }
-    .shape.WATCH { background: rgba(245,185,66,.15); color: var(--watch); }
-    .shape.BAD { background: rgba(255,107,107,.15); color: var(--bad); }
-    .kpis {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 10px;
+    td.mono { font-family: var(--mono); font-size: 0.78rem; }
+    tr:hover td { background: #f7faf9; }
+
+    footer.note {
+      margin-top: 1.25rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.45;
     }
-    .kpi {
-      background: var(--card); border: 1px solid var(--line);
-      border-radius: 16px; padding: 14px 14px 12px;
+
+    .live-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.55rem 0.85rem;
+      margin-bottom: 1rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 14px;
+      background: rgba(15, 107, 102, 0.08);
+      border: 1px solid #b9d9d5;
+      font-size: 0.82rem;
+      color: var(--ink-soft);
     }
-    .kpi b { display: block; font-size: 26px; line-height: 1.1; }
-    .kpi span { color: var(--muted); font-size: 12px; }
-    .card {
-      background: var(--card); border: 1px solid var(--line);
-      border-radius: 18px; padding: 14px; margin-bottom: 10px;
+    .live-bar strong { color: var(--teal-deep); }
+    .live-dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background: var(--good);
+      box-shadow: 0 0 0 4px rgba(26, 122, 76, 0.18);
+      animation: pulse 1.6s ease-in-out infinite;
     }
-    .card h2 { font-size: 13px; color: var(--muted); margin: 0 0 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
-    .hero { display: flex; align-items: center; gap: 16px; }
-    .ring { width: 118px; height: 118px; flex: 0 0 118px; }
-    .hero-stats { flex: 1; display: grid; gap: 8px; }
-    .hero-stats div { font-size: 13px; color: var(--muted); }
-    .hero-stats b { color: var(--text); font-size: 16px; }
-    .legend { display: flex; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: 11px; margin: 0 0 10px; }
-    .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
-    .trend { display: flex; align-items: flex-end; gap: 5px; height: 92px; }
-    .tcol { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; height: 100%; }
-    .tstack { flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; }
-    .tstack .h { background: var(--good); border-radius: 0 0 4px 4px; min-height: 0; }
-    .tstack .m { background: var(--bad); border-radius: 4px 4px 0 0; min-height: 0; }
-    .tcol .n { color: var(--muted); font-size: 9px; margin-top: 4px; }
-    .heat-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
-    .heat {
-      display: grid; gap: 4px; min-width: min-content;
-      grid-template-columns: 58px repeat(var(--ndays, 12), 22px);
-      font-size: 10px;
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(0.85); opacity: 0.7; }
     }
-    .heat .hd, .heat .lab { color: var(--muted); }
-    .heat .hd { text-align: center; font-size: 9px; }
-    .heat .lab {
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      align-self: center; font-weight: 600; color: var(--text);
+    .live-bar a {
+      color: var(--teal);
+      font-weight: 700;
+      word-break: break-all;
     }
-    .cell {
-      width: 22px; height: 22px; border-radius: 6px; border: 0;
-      padding: 0; appearance: none; -webkit-appearance: none;
+    .live-bar .tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--good);
+      background: var(--good-bg);
+      border-radius: 999px;
+      padding: 0.2rem 0.5rem;
     }
-    .cell.hit { background: var(--good); }
-    .cell.miss { background: var(--bad); }
-    .cell.empty { background: #1e2940; }
-    #heatTip { min-height: 18px; margin-top: 8px; color: var(--muted); font-size: 12px; }
-    .fme {
-      cursor: pointer; -webkit-tap-highlight-color: transparent;
-      padding: 12px 0; border-bottom: 1px solid var(--line);
+    .install-bar {
+      display: none;
+      margin-bottom: 1rem;
+      padding: 0.85rem 1rem;
+      border-radius: 14px;
+      background: #0f6b66;
+      color: #fff;
+      font-size: 0.9rem;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
     }
-    .fme:last-child { border-bottom: 0; padding-bottom: 2px; }
-    .fme-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-    .name { font-weight: 700; font-size: 16px; }
-    .meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
-    .bar { height: 6px; background: #1e2940; border-radius: 99px; margin-top: 10px; overflow: hidden; }
-    .bar i { display: block; height: 100%; border-radius: 99px; }
-    .spark { display: flex; gap: 3px; margin-top: 10px; }
-    .spark b { flex: 1; height: 8px; border-radius: 3px; background: #1e2940; }
-    .spark b.hit { background: var(--good); }
-    .spark b.miss { background: var(--bad); }
-    .days {
-      display: none; gap: 6px; overflow-x: auto; padding: 12px 0 2px;
-      -webkit-overflow-scrolling: touch;
+    .install-bar.show { display: flex; }
+    .install-bar button {
+      border: 0;
+      background: #fff;
+      color: #0a4542;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 0.55rem 0.95rem;
+      cursor: pointer;
+      font-family: inherit;
     }
-    .fme.open .days { display: flex; }
-    .chip {
-      min-width: 52px; text-align: center; border-radius: 12px;
-      padding: 8px 6px; font-size: 11px; background: #1a2336; color: var(--muted);
+
+    .empty {
+      padding: 1.5rem;
+      text-align: center;
+      color: var(--ink-soft);
     }
-    .chip b { display: block; font-size: 13px; color: var(--text); }
-    .chip.hit { background: rgba(61,214,140,.14); }
-    .chip.miss { background: rgba(255,107,107,.14); }
-    .chip.empty { opacity: .45; }
-    .row {
-      display: flex; justify-content: space-between; gap: 10px;
-      padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px;
+
+    @media (max-width: 860px) {
+      .grid-3, .grid-2, .kpi-row {
+        grid-template-columns: 1fr;
+      }
+      .ring { width: 76px; height: 76px; }
+      .chart {
+        grid-auto-columns: minmax(36px, 1fr);
+        overflow-x: auto;
+        padding-bottom: 0.25rem;
+      }
     }
-    .row:last-child { border-bottom: 0; }
-    .muted { color: var(--muted); }
-    footer { color: var(--muted); font-size: 12px; padding: 20px var(--pad); max-width: 560px; margin: 0 auto; line-height: 1.45; }
-    .hint {
-      background: #10192b; border: 1px dashed var(--line); border-radius: 14px;
-      padding: 12px; font-size: 13px; color: var(--muted); margin: 0 0 12px;
+
+    @media (max-width: 520px) {
+      .wrap { width: calc(100% - 1rem); padding-top: 0.85rem; }
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+      .fme-id { max-width: 160px; }
     }
-    #lock {
-      display: none; position: fixed; inset: 0; background: var(--bg); z-index: 20;
-      padding: calc(48px + env(safe-area-inset-top)) 24px; text-align: center;
-    }
-    #lock input {
-      width: 100%; max-width: 280px; margin-top: 16px; padding: 14px;
-      border-radius: 12px; border: 1px solid var(--line); background: var(--card);
-      color: var(--text); font-size: 18px; text-align: center;
-    }
-    #pinGo {
-      display: block; width: 100%; max-width: 280px; margin: 12px auto 0;
-      padding: 14px; border: 0; border-radius: 12px; background: var(--accent);
-      color: #fff; font-size: 16px; font-weight: 700;
+
+    @media (prefers-reduced-motion: reduce) {
+      .bar > i, .chart .fill { transition: none; }
     }
   </style>
 </head>
 <body>
-  <div id="lock">
-    <div class="kicker">PM H1 2027</div>
-    <h1>Enter PIN</h1>
-    <input id="pin" type="password" inputmode="numeric" maxlength="12" placeholder="PIN" />
-    <button type="button" id="pinGo">Open</button>
-  </div>
-  <header>
-    <div class="kicker">Kuwait Ooredoo FMO</div>
-    <h1>PM H1 2027</h1>
-    <div id="shape" class="shape">...</div>
-  </header>
-  <main>
-    <p class="hint">Green = on target. Red = below. Grey = off that day. Friday is not scored. Target is 3 paired tasks, or 5 if Small Cell only.</p>
-    <section class="card">
-      <div class="hero">
-        <div id="ring"></div>
-        <div class="hero-stats" id="heroStats"></div>
+  <div class="wrap">
+    <div class="install-bar" id="installBar">
+      <span>Install <strong>PM NTE</strong> on this phone for one-tap access anytime.</span>
+      <button type="button" id="installBtn">Install app</button>
+    </div>
+    <div class="live-bar" id="liveBar" hidden>
+      <span class="live-dot" aria-hidden="true"></span>
+      <span class="tag">Live</span>
+      <span id="liveText">Watching Excel for changes…</span>
+      <span id="phoneLinks"></span>
+    </div>
+    <header class="app-header">
+      <div class="brand-row">
+        <div class="brand">
+          <div class="eyebrow">NTE Field Performance</div>
+          <h1>PM Dashboard H1-2027</h1>
+          <p class="subtitle">Work orders closed by FME · Complete Operator contains NTE</p>
+        </div>
+        <div id="overallStatus" class="status-chip status-warn" aria-live="polite">
+          <span class="dot"></span>
+          <span id="overallStatusText">Loading…</span>
+        </div>
       </div>
+      <div class="meta-bar" id="metaBar"></div>
+    </header>
+
+    <section class="kpi-row" id="kpiRow"></section>
+
+    <section class="grid-3" id="progressCards"></section>
+
+    <section class="grid-2" id="siteCheckSection">
+      <article class="card" id="pairCard">
+        <div class="card-head">
+          <h2>Active + Passive pair check</h2>
+          <span class="hint">2 entries / Site ID</span>
+        </div>
+        <div id="pairBody"></div>
+      </article>
+      <article class="card" id="smallCard">
+        <div class="card-head">
+          <h2>Small Cell / Book RRU / Easy Macro</h2>
+          <span class="hint">1 entry / Site ID</span>
+        </div>
+        <div id="smallBody"></div>
+      </article>
     </section>
-    <div class="kpis" id="kpis"></div>
-    <section class="card">
-      <h2>Daily team</h2>
-      <div class="legend"><span><i style="background:var(--good)"></i>On target</span><span><i style="background:var(--bad)"></i>Below</span></div>
-      <div class="trend" id="trend"></div>
+
+    <section class="card" id="exemptCard" style="margin-bottom:0.9rem">
+      <div class="card-head">
+        <h2>Exempted WOs</h2>
+        <span class="hint">Excluded from pair / Small Cell rules + NTE totals</span>
+      </div>
+      <div id="exemptBody"></div>
     </section>
-    <section class="card">
-      <h2>FME heatmap</h2>
-      <div class="legend"><span><i style="background:var(--good)"></i>Hit</span><span><i style="background:var(--bad)"></i>Miss</span><span><i style="background:#1e2940"></i>Off</span></div>
-      <div class="heat-wrap" id="heat"></div>
-      <div id="heatTip">Tap a square for the score.</div>
+
+    <section class="grid-2">
+      <article class="card">
+        <div class="card-head">
+          <h2>Daily closed WOs</h2>
+          <span class="hint">Target 21 · Fri off</span>
+        </div>
+        <div class="chart" id="dailyChart" aria-label="Daily work order chart"></div>
+        <div class="legend">
+          <span class="lg-good">On / above target</span>
+          <span class="lg-behind">Behind</span>
+          <span class="lg-off">Friday (excluded)</span>
+          <span class="lg-target">Daily target</span>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <h2>FME leaderboard</h2>
+          <span class="hint">3 WOs / FME / day</span>
+        </div>
+        <div class="fme-list" id="fmeList"></div>
+      </article>
     </section>
-    <section class="card">
-      <h2>NTE FME performance</h2>
-      <div id="fmes"></div>
+
+    <section class="grid-2">
+      <article class="card">
+        <div class="card-head">
+          <h2>Monthly progress</h2>
+          <span class="hint">Cycle months</span>
+        </div>
+        <div class="month-grid" id="monthGrid"></div>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <h2>Today by FME</h2>
+          <span class="hint" id="todayHint">—</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>FME</th>
+                <th>Today</th>
+                <th>Target</th>
+                <th>Total</th>
+                <th>Pace</th>
+              </tr>
+            </thead>
+            <tbody id="fmeTable"></tbody>
+          </table>
+        </div>
+      </article>
     </section>
-    <section class="card">
-      <h2>Below target</h2>
-      <div id="below"></div>
-    </section>
-    <section class="card">
-      <h2>Duplicates ignored</h2>
-      <div id="ex"></div>
-    </section>
-  </main>
-  <footer id="foot"></footer>
+
+    <footer class="note" id="footerNote"></footer>
+  </div>
+
+  <script src="dashboard-data.js"></script>
+  <div id="bootError" class="empty" style="display:none"></div>
   <script>
-    const DATA = {"generatedAt":"2026-08-16 19:56","sourceFile":"extract.xlsx","owsUrl":"https://106d-sg.teleows.com/","kpis":{"tasks":265,"sites":265,"fmes":7,"onTarget":75,"fmeDays":93,"hitPct":81,"shape":"GOOD","below":18,"expected":281,"actual":265,"pairs":256,"smallCell":9},"days":["2026-08-01","2026-08-02","2026-08-03","2026-08-04","2026-08-05","2026-08-06","2026-08-08","2026-08-09","2026-08-10","2026-08-11","2026-08-12","2026-08-13","2026-08-15","2026-08-16"],"fme":[{"name":"Mohammed Javeed Shaik","daysWorked":14,"ap":41,"sc":2,"actual":43,"expected":42,"avg":3.1,"onTarget":13,"below":1,"hitPct":93,"shape":"GOOD","daily":[{"day":"2026-08-01","actual":3,"target":3,"hit":true},{"day":"2026-08-02","actual":3,"target":3,"hit":true},{"day":"2026-08-03","actual":3,"target":3,"hit":true},{"day":"2026-08-04","actual":3,"target":3,"hit":true},{"day":"2026-08-05","actual":3,"target":3,"hit":true},{"day":"2026-08-06","actual":4,"target":3,"hit":true},{"day":"2026-08-08","actual":3,"target":3,"hit":true},{"day":"2026-08-09","actual":4,"target":3,"hit":true},{"day":"2026-08-10","actual":3,"target":3,"hit":true},{"day":"2026-08-11","actual":3,"target":3,"hit":true},{"day":"2026-08-12","actual":2,"target":3,"hit":false},{"day":"2026-08-13","actual":3,"target":3,"hit":true},{"day":"2026-08-15","actual":3,"target":3,"hit":true},{"day":"2026-08-16","actual":3,"target":3,"hit":true}]},{"name":"Saji Joseph","daysWorked":14,"ap":41,"sc":0,"actual":41,"expected":42,"avg":2.9,"onTarget":13,"below":1,"hitPct":93,"shape":"GOOD","daily":[{"day":"2026-08-01","actual":3,"target":3,"hit":true},{"day":"2026-08-02","actual":3,"target":3,"hit":true},{"day":"2026-08-03","actual":3,"target":3,"hit":true},{"day":"2026-08-04","actual":2,"target":3,"hit":false},{"day":"2026-08-05","actual":3,"target":3,"hit":true},{"day":"2026-08-06","actual":3,"target":3,"hit":true},{"day":"2026-08-08","actual":3,"target":3,"hit":true},{"day":"2026-08-09","actual":3,"target":3,"hit":true},{"day":"2026-08-10","actual":3,"target":3,"hit":true},{"day":"2026-08-11","actual":3,"target":3,"hit":true},{"day":"2026-08-12","actual":3,"target":3,"hit":true},{"day":"2026-08-13","actual":3,"target":3,"hit":true},{"day":"2026-08-15","actual":3,"target":3,"hit":true},{"day":"2026-08-16","actual":3,"target":3,"hit":true}]},{"name":"Azzam Mushtaque M M Ali Momin","daysWorked":13,"ap":38,"sc":1,"actual":39,"expected":39,"avg":3,"onTarget":12,"below":1,"hitPct":92,"shape":"GOOD","daily":[{"day":"2026-08-01","actual":2,"target":3,"hit":false},{"day":"2026-08-02","actual":3,"target":3,"hit":true},{"day":"2026-08-03","actual":4,"target":3,"hit":true},{"day":"2026-08-04","actual":null,"target":null,"hit":null},{"day":"2026-08-05","actual":3,"target":3,"hit":true},{"day":"2026-08-06","actual":3,"target":3,"hit":true},{"day":"2026-08-08","actual":3,"target":3,"hit":true},{"day":"2026-08-09","actual":3,"target":3,"hit":true},{"day":"2026-08-10","actual":3,"target":3,"hit":true},{"day":"2026-08-11","actual":3,"target":3,"hit":true},{"day":"2026-08-12","actual":3,"target":3,"hit":true},{"day":"2026-08-13","actual":3,"target":3,"hit":true},{"day":"2026-08-15","actual":3,"target":3,"hit":true},{"day":"2026-08-16","actual":3,"target":3,"hit":true}]},{"name":"Peter Kunnath M K Mathai","daysWorked":12,"ap":35,"sc":0,"actual":35,"expected":36,"avg":2.9,"onTarget":10,"below":2,"hitPct":83,"shape":"GOOD","daily":[{"day":"2026-08-01","actual":3,"target":3,"hit":true},{"day":"2026-08-02","actual":3,"target":3,"hit":true},{"day":"2026-08-03","actual":null,"target":null,"hit":null},{"day":"2026-08-04","actual":null,"target":null,"hit":null},{"day":"2026-08-05","actual":2,"target":3,"hit":false},{"day":"2026-08-06","actual":2,"target":3,"hit":false},{"day":"2026-08-08","actual":3,"target":3,"hit":true},{"day":"2026-08-09","actual":3,"target":3,"hit":true},{"day":"2026-08-10","actual":3,"target":3,"hit":true},{"day":"2026-08-11","actual":3,"target":3,"hit":true},{"day":"2026-08-12","actual":3,"target":3,"hit":true},{"day":"2026-08-13","actual":4,"target":3,"hit":true},{"day":"2026-08-15","actual":3,"target":3,"hit":true},{"day":"2026-08-16","actual":3,"target":3,"hit":true}]},{"name":"Nabijohn Piyarjan Piyarjan","daysWorked":14,"ap":38,"sc":0,"actual":38,"expected":42,"avg":2.7,"onTarget":10,"below":4,"hitPct":71,"shape":"WATCH","daily":[{"day":"2026-08-01","actual":2,"target":3,"hit":false},{"day":"2026-08-02","actual":1,"target":3,"hit":false},{"day":"2026-08-03","actual":2,"target":3,"hit":false},{"day":"2026-08-04","actual":2,"target":3,"hit":false},{"day":"2026-08-05","actual":3,"target":3,"hit":true},{"day":"2026-08-06","actual":3,"target":3,"hit":true},{"day":"2026-08-08","actual":4,"target":3,"hit":true},{"day":"2026-08-09","actual":3,"target":3,"hit":true},{"day":"2026-08-10","actual":3,"target":3,"hit":true},{"day":"2026-08-11","actual":3,"target":3,"hit":true},{"day":"2026-08-12","actual":3,"target":3,"hit":true},{"day":"2026-08-13","actual":3,"target":3,"hit":true},{"day":"2026-08-15","actual":3,"target":3,"hit":true},{"day":"2026-08-16","actual":3,"target":3,"hit":true}]},{"name":"Abdul Nazar Jabbar Jabbar","daysWorked":12,"ap":32,"sc":0,"actual":32,"expected":36,"avg":2.7,"onTarget":8,"below":4,"hitPct":67,"shape":"WATCH","daily":[{"day":"2026-08-01","actual":2,"target":3,"hit":false},{"day":"2026-08-02","actual":2,"target":3,"hit":false},{"day":"2026-08-03","actual":null,"target":null,"hit":null},{"day":"2026-08-04","actual":null,"target":null,"hit":null},{"day":"2026-08-05","actual":2,"target":3,"hit":false},{"day":"2026-08-06","actual":1,"target":3,"hit":false},{"day":"2026-08-08","actual":4,"target":3,"hit":true},{"day":"2026-08-09","actual":3,"target":3,"hit":true},{"day":"2026-08-10","actual":3,"target":3,"hit":true},{"day":"2026-08-11","actual":3,"target":3,"hit":true},{"day":"2026-08-12","actual":3,"target":3,"hit":true},{"day":"2026-08-13","actual":3,"target":3,"hit":true},{"day":"2026-08-15","actual":3,"target":3,"hit":true},{"day":"2026-08-16","actual":3,"target":3,"hit":true}]},{"name":"Eldo Chundattu Varghese","daysWorked":14,"ap":31,"sc":6,"actual":37,"expected":44,"avg":2.6,"onTarget":9,"below":5,"hitPct":64,"shape":"WATCH","daily":[{"day":"2026-08-01","actual":3,"target":3,"hit":true},{"day":"2026-08-02","actual":3,"target":3,"hit":true},{"day":"2026-08-03","actual":2,"target":3,"hit":false},{"day":"2026-08-04","actual":1,"target":3,"hit":false},{"day":"2026-08-05","actual":1,"target":3,"hit":false},{"day":"2026-08-06","actual":1,"target":3,"hit":false},{"day":"2026-08-08","actual":5,"target":5,"hit":true},{"day":"2026-08-09","actual":2,"target":3,"hit":false},{"day":"2026-08-10","actual":3,"target":3,"hit":true},{"day":"2026-08-11","actual":4,"target":3,"hit":true},{"day":"2026-08-12","actual":3,"target":3,"hit":true},{"day":"2026-08-13","actual":3,"target":3,"hit":true},{"day":"2026-08-15","actual":3,"target":3,"hit":true},{"day":"2026-08-16","actual":3,"target":3,"hit":true}]}],"below":[{"fme":"Abdul Nazar Jabbar Jabbar","day":"2026-08-01","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Abdul Nazar Jabbar Jabbar","day":"2026-08-02","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Abdul Nazar Jabbar Jabbar","day":"2026-08-05","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Abdul Nazar Jabbar Jabbar","day":"2026-08-06","mode":"Active+Passive","actual":1,"target":3,"ap":1,"sc":0},{"fme":"Azzam Mushtaque M M Ali Momin","day":"2026-08-01","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Eldo Chundattu Varghese","day":"2026-08-03","mode":"Active+Passive","actual":2,"target":3,"ap":1,"sc":1},{"fme":"Eldo Chundattu Varghese","day":"2026-08-04","mode":"Active+Passive","actual":1,"target":3,"ap":1,"sc":0},{"fme":"Eldo Chundattu Varghese","day":"2026-08-05","mode":"Active+Passive","actual":1,"target":3,"ap":1,"sc":0},{"fme":"Eldo Chundattu Varghese","day":"2026-08-06","mode":"Active+Passive","actual":1,"target":3,"ap":1,"sc":0},{"fme":"Eldo Chundattu Varghese","day":"2026-08-09","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Mohammed Javeed Shaik","day":"2026-08-12","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Nabijohn Piyarjan Piyarjan","day":"2026-08-01","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Nabijohn Piyarjan Piyarjan","day":"2026-08-02","mode":"Active+Passive","actual":1,"target":3,"ap":1,"sc":0},{"fme":"Nabijohn Piyarjan Piyarjan","day":"2026-08-03","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Nabijohn Piyarjan Piyarjan","day":"2026-08-04","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Peter Kunnath M K Mathai","day":"2026-08-05","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Peter Kunnath M K Mathai","day":"2026-08-06","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0},{"fme":"Saji Joseph","day":"2026-08-04","mode":"Active+Passive","actual":2,"target":3,"ap":2,"sc":0}],"exceptions":[{"reason":"Unpaired Active/Passive in the same week (ignored)","siteId":"2708","day":"2026-08-01","week":"2026-07-26","subcat":"OGK Passive General","taskId":"PM-20260801-00000046","fme":"Azzam Mushtaque M M Ali Momin"},{"reason":"Duplicate Active+Passive visit later week/site (ignored)","siteId":"2943","day":"2026-08-09","week":"2026-08-09","subcat":"Active+Passive pair","taskId":"PM-20260808-00000164 / PM-20260808-00000154","fme":"Eldo Chundattu Varghese"},{"reason":"Duplicate Small Cell for same site (ignored)","siteId":"3423","day":"2026-08-06","week":"2026-08-02","subcat":"OGK Active Small Cell /Book RRU/Easy Macro","taskId":"PM-20260805-00000141","fme":"Eldo Chundattu Varghese"}],"rules":["PM only - OGK Active and Passive Routine Maintenance","Active + Passive, same site, same week (Sun-Sat) = 1 task","Small Cell = 1 task by itself","NTE FME accounts only","Mohd Yasin counted under Nabijohn (replacement)","Daily target: 3 paired tasks, or 5 if Small Cell only","Friday is not a working day"]};
-    const PIN = "4221";
-
-    function shortName(n) {
-      const p = String(n || "").split(/\s+/);
-      if (/^(mohammed|mohd|muhammad)$/i.test(p[0]) && p[1]) return p[1];
-      if (/^nabijohn$/i.test(p[0])) return "Nabi";
-      return p[0] || n;
-    }
-    function dayLabel(iso) {
-      return new Date(iso + "T00:00:00").getDate();
-    }
-    function colorOf(shape) {
-      return shape === "GOOD" ? "var(--good)" : shape === "WATCH" ? "var(--watch)" : "var(--bad)";
-    }
-    function cellClass(c) {
-      if (!c || c.actual == null) return "empty";
-      return c.hit ? "hit" : "miss";
-    }
-    function unlock() {
-      const box = document.getElementById("pin");
-      if (box.value === PIN) {
-        sessionStorage.setItem("pmh1pin", PIN);
-        document.getElementById("lock").style.display = "none";
-        render();
+    (function () {
+      const data = window.DASHBOARD_DATA;
+      if (!data) {
+        const el = document.getElementById("bootError");
+        el.style.display = "block";
+        el.textContent = "Missing dashboard-data.js. Run: python extract_data.py";
+        return;
       }
-    }
 
-    function render() {
-      const k = DATA.kpis;
-      const shape = document.getElementById("shape");
-      shape.className = "shape " + k.shape;
-      shape.textContent = k.shape + "  ·  " + k.hitPct + "% days on target";
+      const CYCLE_START = parseYMD(data.cycle.start);
+      const CYCLE_END = parseYMD(data.cycle.end);
+      const DAILY_TARGET = data.targets.dailyTeam;
+      const PER_FME = data.targets.perFmeDaily;
+      const FRIDAY = data.targets.excludeWeekday; // 5
+      const ACTIVE_FMES = data.targets.activeFmeCount;
 
-      const r = 38, circ = 2 * Math.PI * r, dash = (k.hitPct / 100) * circ;
-      document.getElementById("ring").innerHTML =
-        '<svg viewBox="0 0 100 100" class="ring"><circle cx="50" cy="50" r="' + r +
-        '" fill="none" stroke="#1e2940" stroke-width="10"/><circle cx="50" cy="50" r="' + r +
-        '" fill="none" stroke="' + colorOf(k.shape) + '" stroke-width="10" stroke-linecap="round" stroke-dasharray="' +
-        dash.toFixed(1) + " " + circ.toFixed(1) +
-        '" transform="rotate(-90 50 50)"/><text x="50" y="48" text-anchor="middle" fill="#f4f7fb" font-size="22" font-weight="700">' +
-        k.hitPct + '%</text><text x="50" y="64" text-anchor="middle" fill="#93a0b8" font-size="8">ON TARGET</text></svg>';
+      const wos = (data.workOrders || []).filter((w) => w.completeDate);
+      const byDate = groupCount(wos, (w) => w.completeDate);
+      const byFme = groupCount(wos, (w) => w.fmeShort);
+      const fmeIds = {};
+      wos.forEach((w) => {
+        const seat = w.fmeShort;
+        if (seat === "Mohd+Nabi") {
+          fmeIds[seat] = "P5-1_PM_NTE_SBK_Mohd + P5-1_PM_NTE_SBK_Nabi (replacement)";
+        } else if (!fmeIds[seat]) {
+          fmeIds[seat] = w.completeOperator;
+        }
+      });
 
-      document.getElementById("heroStats").innerHTML =
-        "<div><b>" + k.onTarget + " / " + k.fmeDays + "</b><br>FME-days on target</div>" +
-        "<div><b>" + k.actual + " / " + k.expected + "</b><br>Tasks vs expected</div>" +
-        "<div><b>" + k.below + "</b><br>Days below target</div>";
+      const latestDataDate = maxDate(Object.keys(byDate)) || startOfToday();
+      const asOf = clampDate(latestDataDate, CYCLE_START, CYCLE_END);
+      const today = clampDate(startOfToday(), CYCLE_START, CYCLE_END);
+      // Daily card uses latest data day; table can still highlight calendar today
+      const viewDay = asOf;
+      const tableDay = Object.keys(byDate).includes(ymd(today)) ? today : asOf;
 
-      document.getElementById("kpis").innerHTML = [
-        [k.tasks, "Tasks completed"],
-        [k.sites, "Work sites"],
-        [k.fmes, "NTE FMEs"],
-        [k.pairs + " + " + k.smallCell, "Pairs + Small Cell"]
-      ].map(function (x) {
-        return '<div class="kpi"><b>' + x[0] + "</b><span>" + x[1] + "</span></div>";
-      }).join("");
+      const workdaysToDate = countWorkdays(CYCLE_START, asOf);
+      const workdaysInCycle = countWorkdays(CYCLE_START, CYCLE_END);
+      const expectedToDate = workdaysToDate * DAILY_TARGET;
+      const cycleTarget = workdaysInCycle * DAILY_TARGET;
+      const closedTotal = wos.length;
+      const gap = closedTotal - expectedToDate;
+      const remainingWorkdays = countWorkdays(addDays(asOf, 1), CYCLE_END);
+      const remainingWos = Math.max(0, cycleTarget - closedTotal);
 
-      const fmeN = DATA.fme.length || 1;
-      document.getElementById("trend").innerHTML = DATA.days.map(function (day) {
-        let hit = 0, miss = 0;
-        DATA.fme.forEach(function (f) {
-          const c = f.daily.filter(function (d) { return d.day === day; })[0];
-          if (c && c.actual != null) { if (c.hit) hit += 1; else miss += 1; }
-        });
-        const ht = Math.round((hit / fmeN) * 100);
-        const mt = Math.round((miss / fmeN) * 100);
-        return '<div class="tcol"><div class="tstack"><div class="m" style="height:' + mt +
-          '%"></div><div class="h" style="height:' + ht + '%"></div></div><div class="n">' +
-          dayLabel(day) + "</div></div>";
-      }).join("");
+      const monthKey = ymd(asOf).slice(0, 7);
+      const monthStart = new Date(asOf.getFullYear(), asOf.getMonth(), 1);
+      const monthEndBound = new Date(asOf.getFullYear(), asOf.getMonth() + 1, 0);
+      const monthEnd = minDate(monthEndBound, CYCLE_END);
+      const monthStartClamped = maxDateObj(monthStart, CYCLE_START);
+      const monthClosed = wos.filter((w) => w.completeDate.startsWith(monthKey)).length;
+      const monthExpected = countWorkdays(monthStartClamped, minDate(asOf, monthEnd)) * DAILY_TARGET;
+      const monthFullExpected = countWorkdays(monthStartClamped, monthEnd) * DAILY_TARGET;
 
-      const heat = document.getElementById("heat");
-      heat.style.setProperty("--ndays", String(DATA.days.length));
-      let heatHtml = '<div></div>' + DATA.days.map(function (d) {
-        return '<div class="hd">' + dayLabel(d) + "</div>";
-      }).join("");
-      DATA.fme.forEach(function (f) {
-        heatHtml += '<div class="lab">' + shortName(f.name) + "</div>";
-        f.daily.forEach(function (c) {
-          const title = shortName(f.name) + " · " + c.day + (c.actual == null ? " · off" : " · " + c.actual + "/" + c.target);
-          heatHtml += '<button type="button" class="cell ' + cellClass(c) + '" data-tip="' + title + '"></button>';
+      const dayKey = ymd(viewDay);
+      const tableDayKey = ymd(tableDay);
+      const dayClosed = byDate[dayKey] || 0;
+      const dayIsOff = !isWorkday(viewDay);
+      const dayExpected = dayIsOff ? 0 : DAILY_TARGET;
+
+      const overallPct = pct(closedTotal, cycleTarget);
+      const toDatePct = pct(closedTotal, expectedToDate || 1);
+      const monthPct = pct(monthClosed, monthExpected || 1);
+      const dayPct = dayIsOff ? 100 : pct(dayClosed, dayExpected || 1);
+
+      const paceStatus = classifyPace(gap, expectedToDate);
+
+      // Header meta
+      document.getElementById("metaBar").innerHTML = [
+        pill("Cycle", formatRange(CYCLE_START, CYCLE_END)),
+        pill("As of data", formatLong(asOf)),
+        pill("Source", data.sourceFile),
+        pill("NTE FMEs in file", String(Object.keys(byFme).length)),
+        pill("Team plan", ACTIVE_FMES + " FMEs × " + PER_FME + " = " + DAILY_TARGET + "/day"),
+        pill("Updated", data.generatedAt),
+      ].join("");
+
+      setStatus(paceStatus, gap, toDatePct);
+
+      document.getElementById("kpiRow").innerHTML = [
+        kpi("Closed (NTE)", closedTotal, "of " + cycleTarget + " cycle target"),
+        kpi("Expected to date", expectedToDate, workdaysToDate + " workdays × " + DAILY_TARGET),
+        kpi(gap >= 0 ? "Ahead by" : "Behind by", Math.abs(gap), gap >= 0 ? "WOs vs plan" : "WOs vs plan"),
+        kpi("Incomplete pairs", (data.siteChecks && data.siteChecks.generalPairs && data.siteChecks.generalPairs.incompleteSiteCount) || 0, "sites missing Active or Passive"),
+      ].join("");
+
+      document.getElementById("progressCards").innerHTML = [
+        progressCard("Daily progress", dayIsOff ? "Friday — no target" : (dayClosed + " / " + dayExpected), dayPct, dayClosed, dayExpected, dayIsOff ? "off" : paceTone(dayClosed - dayExpected, dayExpected), dayIsOff ? "Rest day (excluded from plan)" : formatLong(viewDay) + " · target " + DAILY_TARGET),
+        progressCard("Monthly progress", monthClosed + " / " + monthExpected, monthPct, monthClosed, monthExpected, paceTone(monthClosed - monthExpected, monthExpected), monthLabel(asOf) + " · full month target " + monthFullExpected),
+        progressCard("Overall progress", closedTotal + " / " + expectedToDate + " to-date", toDatePct, closedTotal, expectedToDate, paceTone(gap, expectedToDate), "Cycle completion " + overallPct + "% (" + closedTotal + "/" + cycleTarget + ")"),
+      ].join("");
+
+      // Animate bars
+      requestAnimationFrame(() => {
+        document.querySelectorAll(".bar[data-w]").forEach((el) => {
+          el.querySelector("i").style.width = Math.min(100, Number(el.dataset.w)) + "%";
         });
       });
-      heat.innerHTML = heatHtml;
-      heat.onclick = function (e) {
-        const btn = e.target.closest(".cell");
-        if (btn) document.getElementById("heatTip").textContent = btn.getAttribute("data-tip");
-      };
 
-      document.getElementById("fmes").innerHTML = DATA.fme.map(function (f, i) {
-        const color = colorOf(f.shape);
-        const spark = f.daily.map(function (c) {
-          return '<b class="' + cellClass(c) + '"></b>';
+      renderDailyChart(byDate, asOf);
+      renderFmeList(byFme, fmeIds, workdaysToDate, dayKey, byDate);
+      renderMonths(wos);
+      renderFmeTable(byFme, fmeIds, workdaysToDate, tableDayKey, wos);
+      renderSiteChecks(data.siteChecks || null);
+      document.getElementById("todayHint").textContent = formatLong(tableDay) + (!isWorkday(tableDay) ? " · Friday off" : "");
+
+      document.getElementById("footerNote").innerHTML =
+        "Rules: Fridays excluded · 6 workdays/week · " + ACTIVE_FMES + " FMEs × " + PER_FME +
+        " WOs/day = " + DAILY_TARGET + " team target · Only rows where Complete Operator contains <strong>NTE</strong> · " +
+        "Phone app: run <strong>Setup Phone App.bat</strong> once for a fixed URL, then Install app on Android. " +
+        "Updates publish automatically when Excel changes (Open Dashboard.bat running) or via Publish Now.bat.";
+
+      startLiveUpdates();
+      setupInstallPrompt();
+
+      /* ---------- helpers ---------- */
+      function parseYMD(s) {
+        const [y, m, d] = s.split("-").map(Number);
+        return new Date(y, m - 1, d);
+      }
+      function ymd(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return y + "-" + m + "-" + day;
+      }
+      function startOfToday() {
+        const n = new Date();
+        return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+      }
+      function addDays(d, n) {
+        const x = new Date(d);
+        x.setDate(x.getDate() + n);
+        return x;
+      }
+      function isWorkday(d) {
+        return d.getDay() !== FRIDAY;
+      }
+      function countWorkdays(from, to) {
+        if (to < from) return 0;
+        let n = 0;
+        for (let d = new Date(from); d <= to; d = addDays(d, 1)) {
+          if (isWorkday(d)) n++;
+        }
+        return n;
+      }
+      function clampDate(d, a, b) {
+        if (d < a) return a;
+        if (d > b) return b;
+        return d;
+      }
+      function minDate(a, b) { return a <= b ? a : b; }
+      function maxDateObj(a, b) { return a >= b ? a : b; }
+      function maxDate(keys) {
+        if (!keys.length) return null;
+        return parseYMD(keys.sort().at(-1));
+      }
+      function pct(num, den) {
+        if (!den) return 0;
+        return Math.round((num / den) * 1000) / 10;
+      }
+      function groupCount(arr, keyFn) {
+        const o = {};
+        arr.forEach((x) => {
+          const k = keyFn(x);
+          o[k] = (o[k] || 0) + 1;
+        });
+        return o;
+      }
+      function classifyPace(gap, expected) {
+        if (expected <= 0) return { tone: "warn", label: "No workdays yet" };
+        const ratio = gap / expected;
+        if (gap >= Math.max(3, expected * 0.05)) return { tone: "ahead", label: "Ahead of plan" };
+        if (gap >= 0) return { tone: "good", label: "On track" };
+        if (ratio > -0.15) return { tone: "warn", label: "Slightly behind" };
+        return { tone: "bad", label: "Behind schedule" };
+      }
+      function paceTone(gap, expected) {
+        if (expected <= 0) return "good";
+        if (gap >= 0) return gap / (expected || 1) >= 0.05 ? "ahead" : "good";
+        if (gap / expected > -0.15) return "behind";
+        return "critical";
+      }
+      function setStatus(status, gap, toDatePct) {
+        const el = document.getElementById("overallStatus");
+        const text = document.getElementById("overallStatusText");
+        el.className = "status-chip status-" + status.tone;
+        const gapTxt = gap >= 0 ? "+" + gap : String(gap);
+        text.textContent = status.label + " · " + gapTxt + " vs plan · " + toDatePct + "% of expected";
+      }
+      function pill(k, v) {
+        return '<span class="meta-pill"><strong>' + escapeHtml(k) + ":</strong> " + escapeHtml(v) + "</span>";
+      }
+      function kpi(k, v, s) {
+        return '<div class="kpi"><div class="k">' + escapeHtml(k) + '</div><div class="v">' + escapeHtml(String(v)) + '</div><div class="s">' + escapeHtml(s) + "</div></div>";
+      }
+      function progressCard(title, valueLine, percent, num, den, tone, sub) {
+        const ringColor = tone === "ahead" ? "var(--ahead)" : tone === "behind" ? "var(--warn)" : tone === "critical" ? "var(--bad)" : tone === "off" ? "#a8b5b2" : "var(--teal)";
+        const barClass = tone === "ahead" ? "over" : tone === "behind" ? "behind" : tone === "critical" ? "critical" : "";
+        const p = Math.max(0, Math.min(100, percent));
+        return (
+          '<article class="card progress-card">' +
+            '<div class="card-head"><h2>' + escapeHtml(title) + '</h2><span class="hint">' + escapeHtml(sub) + "</span></div>" +
+            '<div class="ring-wrap">' +
+              '<div class="ring" style="--p:' + p + ";--c:" + ringColor + '"><span>' + (tone === "off" ? "OFF" : p + "%") + "</span></div>" +
+              '<div class="metrics"><div class="label">Closed / Target</div><div class="value">' + escapeHtml(valueLine) + '</div><div class="sub">' + (tone === "off" ? "Not counted in plan" : (num - den >= 0 ? "▲ " : "▼ ") + Math.abs(num - den) + " vs target") + "</div></div>" +
+            "</div>" +
+            '<div class="bar ' + barClass + '" data-w="' + p + '"><i></i></div>' +
+          "</article>"
+        );
+      }
+      function formatLong(d) {
+        return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+      }
+      function formatRange(a, b) {
+        const opts = { day: "numeric", month: "short", year: "numeric" };
+        return a.toLocaleDateString(undefined, opts) + " – " + b.toLocaleDateString(undefined, opts);
+      }
+      function monthLabel(d) {
+        return d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+      }
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function renderDailyChart(byDate, asOf) {
+        const el = document.getElementById("dailyChart");
+        let from = CYCLE_START;
+        const spanDays = Math.round((asOf - from) / 86400000) + 1;
+        if (spanDays > 28) from = addDays(asOf, -27);
+
+        const cols = [];
+        const scaleMax = Math.max(DAILY_TARGET, ...Object.values(byDate), 1);
+        for (let d = new Date(from); d <= asOf; d = addDays(d, 1)) {
+          const key = ymd(d);
+          const count = byDate[key] || 0;
+          const off = !isWorkday(d);
+          const tone = off ? "off" : paceTone(count - DAILY_TARGET, DAILY_TARGET);
+          const fillH = count === 0 ? (off ? 6 : 3) : Math.max(6, (count / scaleMax) * 100);
+          const targetBottom = (DAILY_TARGET / scaleMax) * 100;
+          cols.push(
+            '<div class="col" title="' + formatLong(d) + ": " + count + (off ? " (Fri)" : "") + '">' +
+              '<div class="stack">' +
+                (off ? "" : '<div class="target-line" style="bottom:' + targetBottom + '%"></div>') +
+                '<div class="fill ' + tone + '" style="height:' + Math.min(100, fillH) + '%"></div>' +
+              "</div>" +
+              '<div class="cnt">' + count + "</div>" +
+              '<div class="day">' + d.toLocaleDateString(undefined, { day: "numeric", month: "short" }) + (off ? "<br>Fri" : "") + "</div>" +
+            "</div>"
+          );
+        }
+        el.innerHTML = cols.join("");
+      }
+
+      function renderFmeList(byFme, fmeIds, workdaysToDate, dayKey, byDate) {
+        const el = document.getElementById("fmeList");
+        const expectedPerFme = workdaysToDate * PER_FME;
+        const names = Object.keys(byFme).sort((a, b) => byFme[b] - byFme[a] || a.localeCompare(b));
+        if (!names.length) {
+          el.innerHTML = '<div class="empty">No NTE completions found.</div>';
+          return;
+        }
+        el.innerHTML = names.map((name) => {
+          const total = byFme[name];
+          const gapF = total - expectedPerFme;
+          const p = pct(total, expectedPerFme || 1);
+          const tone = paceTone(gapF, expectedPerFme);
+          const badgeClass = tone === "ahead" || tone === "good" ? "status-good" : tone === "behind" ? "status-warn" : "status-bad";
+          const badgeText = gapF >= 0 ? "On pace" : "Behind";
+          return (
+            '<div class="fme-row">' +
+              '<div><div class="fme-name">' + escapeHtml(name) + '</div><div class="fme-id">' + escapeHtml(fmeIds[name] || "") + "</div></div>" +
+              '<div class="fme-stats">' + total + " / " + expectedPerFme + '</div>' +
+              '<span class="fme-badge ' + badgeClass + '">' + badgeText + " " + (gapF >= 0 ? "+" : "") + gapF + "</span>" +
+              '<div class="bar ' + (tone === "ahead" ? "over" : tone === "behind" ? "behind" : tone === "critical" ? "critical" : "") + '" data-w="' + Math.min(100, p) + '"><i></i></div>' +
+            "</div>"
+          );
         }).join("");
-        const chips = f.daily.map(function (c) {
-          if (c.actual == null) return '<div class="chip empty"><b>-</b>' + dayLabel(c.day) + "</div>";
-          return '<div class="chip ' + (c.hit ? "hit" : "miss") + '"><b>' + c.actual + "/" + c.target + "</b>" + dayLabel(c.day) + "</div>";
+        requestAnimationFrame(() => {
+          el.querySelectorAll(".bar[data-w]").forEach((b) => {
+            b.querySelector("i").style.width = Math.min(100, Number(b.dataset.w)) + "%";
+          });
+        });
+      }
+
+      function renderMonths(wos) {
+        const el = document.getElementById("monthGrid");
+        const months = [];
+        let cursor = new Date(CYCLE_START.getFullYear(), CYCLE_START.getMonth(), 1);
+        const last = new Date(CYCLE_END.getFullYear(), CYCLE_END.getMonth(), 1);
+        while (cursor <= last) {
+          months.push(new Date(cursor));
+          cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1);
+        }
+        el.innerHTML = months.map((m) => {
+          const key = ymd(m).slice(0, 7);
+          const mStart = maxDateObj(new Date(m.getFullYear(), m.getMonth(), 1), CYCLE_START);
+          const mEnd = minDate(new Date(m.getFullYear(), m.getMonth() + 1, 0), CYCLE_END);
+          const through = minDate(mEnd, asOf);
+          const future = mStart > asOf;
+          const closed = future ? 0 : wos.filter((w) => w.completeDate.startsWith(key)).length;
+          const expected = future ? 0 : countWorkdays(mStart, through) * DAILY_TARGET;
+          const full = countWorkdays(mStart, mEnd) * DAILY_TARGET;
+          const p = future ? 0 : pct(closed, expected || 1);
+          const tone = future ? "" : paceTone(closed - expected, expected || 1);
+          const label = m.toLocaleDateString(undefined, { month: "short", year: "numeric" });
+          return (
+            '<div class="month-row">' +
+              '<div class="name">' + label + "</div>" +
+              '<div class="bar ' + (tone === "ahead" ? "over" : tone === "behind" ? "behind" : tone === "critical" ? "critical" : "") + '" data-w="' + (future ? 0 : Math.min(100, p)) + '"><i></i></div>' +
+              '<div class="nums">' + (future ? "— / " + full : closed + " / " + expected + " · " + full + " mo") + "</div>" +
+            "</div>"
+          );
         }).join("");
-        return '<div class="fme" data-i="' + i + '"><div class="fme-top"><div><div class="name">' + f.name +
-          '</div><div class="meta">' + f.actual + " / " + f.expected + " tasks · avg " + f.avg +
-          " · " + f.onTarget + "/" + f.daysWorked + " days</div></div><div class='shape " + f.shape + "'>" + f.shape +
-          "</div></div><div class='bar'><i style='width:" + f.hitPct + "%;background:" + color +
-          "'></i></div><div class='spark'>" + spark + "</div><div class='days'>" + chips + "</div></div>";
-      }).join("");
+        requestAnimationFrame(() => {
+          el.querySelectorAll(".bar[data-w]").forEach((b) => {
+            b.querySelector("i").style.width = Math.min(100, Number(b.dataset.w)) + "%";
+          });
+        });
+      }
 
-      document.getElementById("fmes").onclick = function (e) {
-        const card = e.target.closest(".fme");
-        if (card) card.classList.toggle("open");
-      };
+      function renderSiteChecks(checks) {
+        const pairBody = document.getElementById("pairBody");
+        const smallBody = document.getElementById("smallBody");
+        const exemptBody = document.getElementById("exemptBody");
+        if (!checks) {
+          pairBody.innerHTML = '<p class="rule-note">Site checks not available — refresh data from Excel.</p>';
+          smallBody.innerHTML = "";
+          if (exemptBody) exemptBody.innerHTML = "";
+          return;
+        }
+        const gp = checks.generalPairs || {};
+        const sc = checks.smallCell || {};
+        const ex = checks.exemptions || {};
+        const incomplete = gp.incompleteSites || [];
+        const incompleteN = gp.incompleteSiteCount || 0;
+        const pairTone = incompleteN ? "bad" : "good";
 
-      const below = DATA.below || [];
-      document.getElementById("below").innerHTML = below.length ? below.map(function (b) {
-        return '<div class="row"><div>' + b.fme + '<div class="muted">' + b.day + " · " + b.mode +
-          "</div></div><b>" + b.actual + " / " + b.target + "</b></div>";
-      }).join("") : '<div class="muted">None</div>';
+        pairBody.innerHTML =
+          '<p class="rule-note">Each Site ID should have <strong>2</strong> entries: <strong>OGK Passive General</strong> + <strong>OGK Active General</strong>. Exempted WOs are not counted.</p>' +
+          '<div class="site-stat">' +
+            '<div class="box good"><div class="k">Complete pairs</div><div class="v">' + (gp.completeSiteCount || 0) + "</div></div>" +
+            '<div class="box ' + pairTone + '"><div class="k">Incomplete sites</div><div class="v">' + incompleteN + "</div></div>" +
+            '<div class="box warn"><div class="k">Missing Passive</div><div class="v">' + (gp.missingPassiveCount || 0) + "</div></div>" +
+            '<div class="box warn"><div class="k">Missing Active</div><div class="v">' + (gp.missingActiveCount || 0) + "</div></div>" +
+          "</div>" +
+          (incompleteN
+            ? ('<h2 style="margin:0 0 0.45rem;font-size:0.85rem;color:var(--bad)">Sites missing Active or Passive</h2>' +
+               '<div class="chip-list">' +
+               incomplete.map(function (row) {
+                 return '<span class="chip bad" title="Missing: ' + escapeHtml((row.missing || []).join(", ")) + '">' +
+                   escapeHtml(row.siteId) + " · miss " + escapeHtml((row.missing || []).map(shortSub).join(" / ")) +
+                   "</span>";
+               }).join("") +
+               "</div>")
+            : '<p class="rule-note" style="color:var(--good);font-weight:700">All general sites have both Active + Passive.</p>');
 
-      const ex = DATA.exceptions || [];
-      document.getElementById("ex").innerHTML = ex.length ? ex.map(function (x) {
-        return '<div class="row"><div>' + x.siteId + '<div class="muted">' + x.day + " · " + x.reason +
-          "</div></div></div>";
-      }).join("") : '<div class="muted">None</div>';
+        const dup = sc.duplicateSites || [];
+        smallBody.innerHTML =
+          '<p class="rule-note"><strong>OGK Active Small Cell /Book RRU/Easy Macro</strong> should be a <strong>single</strong> Site ID entry.</p>' +
+          '<div class="site-stat">' +
+            '<div class="box"><div class="k">Small Cell WOs</div><div class="v">' + (sc.woCount || 0) + "</div></div>" +
+            '<div class="box"><div class="k">Small Cell sites</div><div class="v">' + (sc.siteCount || 0) + "</div></div>" +
+            '<div class="box ' + (dup.length ? "bad" : "good") + '"><div class="k">Sites with &gt;1 entry</div><div class="v">' + (sc.duplicateCount || 0) + "</div></div>" +
+            '<div class="box"><div class="k">Expected / site</div><div class="v">1</div></div>' +
+          "</div>" +
+          ((sc.sites || []).length
+            ? ('<h2 style="margin:0 0 0.45rem;font-size:0.85rem">Small Cell Site IDs</h2>' +
+               '<div class="chip-list">' +
+               (sc.sites || []).map(function (row) {
+                 const bad = (row.woCount || 0) > 1;
+                 return '<span class="chip ' + (bad ? "bad" : "") + '">' + escapeHtml(row.siteId) +
+                   (bad ? (" ×" + row.woCount) : "") + "</span>";
+               }).join("") +
+               "</div>")
+            : '<p class="rule-note">No Small Cell sites in this report yet.</p>');
 
-      document.getElementById("foot").innerHTML =
-        "Updated " + DATA.generatedAt + " from " + DATA.sourceFile +
-        ". Pairing: same site, same week. NTE only. Mohd counted under Nabi. Source: " + DATA.owsUrl;
-    }
+        const siteRows = ex.siteIds || [];
+        if (exemptBody) {
+          exemptBody.innerHTML =
+            '<div class="site-stat">' +
+              '<div class="box"><div class="k">Exempted WOs</div><div class="v">' + (ex.matchedWoCount || 0) + "</div></div>" +
+              '<div class="box good"><div class="k">Common Site IDs</div><div class="v">' + (ex.commonSiteIdCount || 0) + "</div></div>" +
+              '<div class="box"><div class="k">Listed</div><div class="v">' + (ex.listedWoCount || 0) + "</div></div>" +
+              '<div class="box ' + ((ex.missingWoCount || 0) ? "warn" : "") + '"><div class="k">Not in Excel</div><div class="v">' + (ex.missingWoCount || 0) + "</div></div>" +
+            "</div>" +
+            (siteRows.length
+              ? ('<h2 style="margin:0 0 0.45rem;font-size:0.85rem">Exempted Site IDs (' + (ex.commonSiteIdCount || 0) + ")</h2>" +
+                 '<div class="chip-list">' +
+                 siteRows.map(function (row) {
+                   return '<span class="chip">' + escapeHtml(row.siteId) +
+                     ((row.woCount || 0) > 1 ? (" ×" + row.woCount) : "") +
+                     "</span>";
+                 }).join("") +
+                 "</div>")
+              : '<p class="rule-note">No exempted Site IDs matched in the current Excel.</p>');
+        }
+      }
 
-    if (!PIN) {
-      render();
-    } else if (sessionStorage.getItem("pmh1pin") === PIN) {
-      render();
-    } else {
-      document.getElementById("lock").style.display = "block";
-      document.getElementById("pin").addEventListener("keydown", function (e) {
-        if (e.key === "Enter") unlock();
-      });
-      document.getElementById("pinGo").addEventListener("click", unlock);
-    }
+      function shortSub(name) {
+        if (name === "OGK Passive General") return "Passive";
+        if (name === "OGK Active General") return "Active";
+        return name;
+      }
+
+      function renderFmeTable(byFme, fmeIds, workdaysToDate, dayKey, wos) {
+        const tbody = document.getElementById("fmeTable");
+        const todayByFme = {};
+        wos.filter((w) => w.completeDate === dayKey).forEach((w) => {
+          todayByFme[w.fmeShort] = (todayByFme[w.fmeShort] || 0) + 1;
+        });
+        const expectedPerFme = workdaysToDate * PER_FME;
+        const names = Object.keys(byFme).sort((a, b) => byFme[b] - byFme[a] || a.localeCompare(b));
+        tbody.innerHTML = names.map((name) => {
+          const todayCnt = todayByFme[name] || 0;
+          const total = byFme[name];
+          const gapF = total - expectedPerFme;
+          const pace = gapF >= 0 ? "On track" : "Behind";
+          const color = gapF >= 0 ? "var(--good)" : "var(--warn)";
+          return (
+            "<tr>" +
+              "<td><strong>" + escapeHtml(name) + "</strong><div class='fme-id'>" + escapeHtml(fmeIds[name] || "") + "</div></td>" +
+              '<td class="mono">' + todayCnt + "</td>" +
+              '<td class="mono">' + PER_FME + "</td>" +
+              '<td class="mono">' + total + "</td>" +
+              '<td style="color:' + color + ';font-weight:700">' + pace + " (" + (gapF >= 0 ? "+" : "") + gapF + ")</td>" +
+            "</tr>"
+          );
+        }).join("");
+      }
+
+      function startLiveUpdates() {
+        // Only when opened via the local server (not file://)
+        if (location.protocol === "file:") {
+          return;
+        }
+        // On the fixed Netlify URL there is no /api/status — skip quietly
+        if (location.hostname.indexOf("netlify.app") !== -1 || location.protocol === "https:") {
+          const bar = document.getElementById("liveBar");
+          // Show a compact note only on local live server
+          if (location.hostname !== "127.0.0.1" && location.hostname !== "localhost" && location.port !== "8765") {
+            return;
+          }
+        }
+        const bar = document.getElementById("liveBar");
+        const liveText = document.getElementById("liveText");
+        const phoneLinks = document.getElementById("phoneLinks");
+        bar.hidden = false;
+        let knownStamp = null;
+
+        async function tick() {
+          try {
+            const res = await fetch("/api/status?t=" + Date.now(), { cache: "no-store" });
+            if (!res.ok) return;
+            const st = await res.json();
+            // Keep checking until the public Android URL appears
+            if (st.urls && st.urls.public) {
+              phoneLinks.innerHTML = ' · <strong>Android:</strong> <a href="' + st.urls.public + '" target="_blank" rel="noopener">' + st.urls.public + "</a>";
+            } else if (st.urls && Array.isArray(st.urls.phone)) {
+              const pub = st.urls.phone.find(function (u) { return String(u).indexOf("trycloudflare.com") !== -1; });
+              if (pub) {
+                phoneLinks.innerHTML = ' · <strong>Android:</strong> <a href="' + pub + '" target="_blank" rel="noopener">' + pub + "</a>";
+              }
+            }
+            if (st.dataMtime != null) {
+              if (knownStamp === null) {
+                knownStamp = st.dataMtime;
+                liveText.textContent = "Watching Excel · last update " + (st.updatedAt || "");
+              } else if (st.dataMtime !== knownStamp) {
+                liveText.textContent = "Excel changed — refreshing…";
+                location.reload();
+              } else {
+                liveText.textContent = "Watching Excel · last update " + (st.updatedAt || "");
+              }
+            }
+          } catch (e) {
+            // Fixed cloud host has no live API — ignore
+            bar.hidden = true;
+          }
+        }
+
+        tick();
+        setInterval(tick, 3000);
+      }
+
+      function setupInstallPrompt() {
+        let deferred = null;
+        const bar = document.getElementById("installBar");
+        const btn = document.getElementById("installBtn");
+        window.addEventListener("beforeinstallprompt", function (e) {
+          e.preventDefault();
+          deferred = e;
+          bar.classList.add("show");
+        });
+        btn.addEventListener("click", async function () {
+          if (!deferred) {
+            alert("In Chrome: tap menu ⋮ → Install app / Add to Home screen");
+            return;
+          }
+          deferred.prompt();
+          await deferred.userChoice;
+          deferred = null;
+          bar.classList.remove("show");
+        });
+        // iOS / browsers without beforeinstallprompt
+        const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        const isStandalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+        if (isIos && !isStandalone) {
+          bar.classList.add("show");
+          btn.textContent = "How to install";
+          btn.onclick = function () {
+            alert("Safari: Share → Add to Home Screen");
+          };
+        }
+        if ("serviceWorker" in navigator && location.protocol !== "file:") {
+          navigator.serviceWorker.register("./sw.js").catch(function () {});
+        }
+      }
+    })();
   </script>
 </body>
 </html>
