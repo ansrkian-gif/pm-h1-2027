@@ -221,4 +221,20 @@ html = html.replace("__DASHBOARD_PIN__", process.env.DASHBOARD_PIN || "");
 fs.writeFileSync(path.join(outDir, "index.html"), html);
 const summary = `${teamShape} | ${payload.kpis.tasks} tasks | ${teamOn}/${perf.length} days on target (${teamHit}%)`;
 fs.writeFileSync(path.join(outDir, "telegram.txt"), summary + "\n" + payload.below.slice(0, 12).map((b) => `${b.fme}: ${b.actual}/${b.target} on ${b.day}`).join("\n"));
+
+const today = new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
+const todayRows = perf
+  .filter((p) => p.day === today)
+  .sort((a, b) => Number(b.hit) - Number(a.hit) || a.fme.localeCompare(b.fme));
+const todayOn = todayRows.filter((p) => p.hit).length;
+const shortName = (name) => String(name || "").split(" ").slice(0, 2).join(" ");
+const ntfyLines = [
+  `PM H1  ${today}  ${teamShape}`,
+  todayRows.length ? `Today ${todayOn}/${todayRows.length} on target` : "No NTE tasks counted for today yet",
+  ...todayRows.map((p) => `${p.hit ? "OK  " : "MISS"} ${shortName(p.fme)}  ${p.actual}/${p.target}`),
+  `H1 ${payload.kpis.tasks} tasks | ${teamOn}/${perf.length} days (${teamHit}%)`,
+  "https://ansrkian-gif.github.io/pm-h1-2027/",
+];
+fs.writeFileSync(path.join(outDir, "ntfy.txt"), ntfyLines.join("\n") + "\n");
+fs.writeFileSync(path.join(outDir, "ntfy.priority"), todayRows.some((p) => !p.hit) ? "high" : "default");
 console.log("Wrote dashboard", summary);
