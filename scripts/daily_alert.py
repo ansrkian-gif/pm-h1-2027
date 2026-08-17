@@ -13,7 +13,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -21,6 +21,13 @@ DASH = ROOT / "dashboard"
 CONFIG = ROOT / "alert_config.json"
 EXTRACT = ROOT / "scripts" / "extract_data.py"
 DATA_JS = DASH / "dashboard-data.js"
+KUWAIT = timezone(timedelta(hours=3))
+
+
+def kuwait_today() -> date:
+    return datetime.now(KUWAIT).date()
+
+
 FRIDAY = 4  # Python weekday(): Mon=0 ... Fri=4
 
 
@@ -56,7 +63,7 @@ def build_summary(today: date | None = None) -> tuple[str, str, dict]:
     targets = data.get("targets", {})
     team_target = int(targets.get("dailyTeam", 21))
     per_fme = int(targets.get("perFmeDaily", 3))
-    today = today or date.today()
+    today = today or kuwait_today()
     today_key = today.isoformat()
     day_name = today.strftime("%a %d %b")
 

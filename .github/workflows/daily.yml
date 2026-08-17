@@ -62,6 +62,8 @@ jobs:
           python3 -m pip install --user openpyxl
           python3 scripts/extract_data.py
           python3 -c "import json,os; open('dashboard/pin.js','w',encoding='utf-8').write('window.DASHBOARD_PIN=' + json.dumps(os.environ.get('DASHBOARD_PIN','')) + ';\n')"
+          STAMP=$(date +%s)
+          sed -i "s/__BUILD_STAMP__/${STAMP}/g" dashboard/index.html dashboard/alert.html
           python3 scripts/daily_alert.py
       - name: Upload OWS screenshots if pull failed
         if: failure()
