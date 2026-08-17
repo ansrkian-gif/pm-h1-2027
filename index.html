@@ -129,17 +129,27 @@
       background: currentColor;
       flex-shrink: 0;
     }
-    a.refresh-link {
+    a.refresh-link, button.reload-link {
       display: inline-flex;
       align-items: center;
       padding: 0.38rem 0.75rem;
       border-radius: 999px;
       font-weight: 700;
       font-size: 0.75rem;
-      background: #fff;
-      color: var(--teal-deep);
       text-decoration: none;
       white-space: nowrap;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    a.refresh-link {
+      background: #fff;
+      color: var(--teal-deep);
+      border: 0;
+    }
+    button.reload-link {
+      background: transparent;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.55);
     }
 
     .status-good { background: var(--good-bg); color: var(--good); border-color: #b7e0c7; }
@@ -664,7 +674,8 @@
           <span class="dot"></span>
           <span id="overallStatusText">Loading…</span>
         </div>
-        <a class="refresh-link" href="https://github.com/ansrkian-gif/pm-h1-2027/issues/1" target="_blank" rel="noopener">Refresh now</a>
+        <button type="button" class="reload-link" id="reloadBtn">Reload</button>
+        <a class="refresh-link" href="https://github.com/ansrkian-gif/pm-h1-2027/issues/1" target="_blank" rel="noopener">Get new data</a>
       </div>
     </div>
     <div class="meta-bar" id="metaBar"></div>
@@ -768,7 +779,7 @@
     <footer class="note" id="footerNote"></footer>
   </div>
 
-  <script src="dashboard-data.js?v=1786999829"></script>
+  <script src="dashboard-data.js?v=1787001947"></script>
   <div id="bootError" class="empty" style="display:none"></div>
   <script>
     (function () {
@@ -1298,6 +1309,14 @@
             });
           }
           navigator.serviceWorker.register("./sw.js?v=4").catch(function () {});
+        }
+        var reloadBtn = document.getElementById("reloadBtn");
+        if (reloadBtn) {
+          reloadBtn.onclick = function () {
+            var u = new URL(location.href);
+            u.searchParams.set("t", String(Date.now()));
+            location.replace(u.toString());
+          };
         }
       }
     })();
