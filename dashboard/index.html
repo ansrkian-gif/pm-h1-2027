@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0f3d3e" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <title>PM H1-2027 · NTE Field Dashboard</title>
   <script src="pin.js"></script>
   <script src="pin-gate.js"></script>
@@ -1288,7 +1289,15 @@
           };
         }
         if ("serviceWorker" in navigator && location.protocol !== "file:") {
-          navigator.serviceWorker.register("./sw.js").catch(function () {});
+          navigator.serviceWorker.getRegistrations().then(function (regs) {
+            regs.forEach(function (reg) { reg.update(); });
+          });
+          if (window.caches) {
+            caches.keys().then(function (keys) {
+              keys.filter(function (k) { return k !== "pm-nte-v4"; }).forEach(function (k) { caches.delete(k); });
+            });
+          }
+          navigator.serviceWorker.register("./sw.js?v=4").catch(function () {});
         }
       }
     })();
