@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f3d3e" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>Site lookup · PM H1-2027</title>
+  <script src="pin.js"></script>
+  <script src="pin-gate.js"></script>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #eef2f1;
+      --surface: #fff;
+      --ink: #142523;
+      --ink-soft: #4a5c5a;
+      --muted: #7a8c89;
+      --line: #d5e0dd;
+      --teal: #0f6b66;
+      --teal-deep: #0a4542;
+      --nte: #0e7490;
+      --te: #7c3aed;
+      --warn: #b45309;
+      --mono: "IBM Plex Mono", ui-monospace, monospace;
+      --sans: "DM Sans", system-ui, sans-serif;
+      --pad: max(0.7rem, env(safe-area-inset-left));
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; max-width: 100%; overflow-x: hidden; }
+    body {
+      font-family: var(--sans);
+      color: var(--ink);
+      background: var(--bg);
+      min-height: 100dvh;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--teal-deep);
+      color: #e7f2f0;
+      padding: max(0.5rem, env(safe-area-inset-top)) var(--pad) 0.7rem;
+    }
+    .top {
+      width: min(640px, 100%);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+    }
+    .eyebrow { font-size: 0.62rem; letter-spacing: 0.12em; text-transform: uppercase; color: #9fd4cf; font-weight: 700; }
+    h1 { margin: 0.1rem 0 0; font-size: 1.15rem; color: #fff; }
+    a.back {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.78rem;
+      border: 1px solid rgba(255,255,255,0.5);
+      border-radius: 999px;
+      padding: 0.35rem 0.7rem;
+      white-space: nowrap;
+    }
+    .wrap {
+      width: min(640px, 100%);
+      margin: 0 auto;
+      padding: 0.85rem var(--pad) calc(1.4rem + env(safe-area-inset-bottom));
+    }
+    form.search {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 0.7rem;
+    }
+    input[type="search"] {
+      flex: 1;
+      min-width: 0;
+      font-size: 1.05rem;
+      padding: 0.75rem 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      font-family: var(--mono);
+    }
+    button.go {
+      border: 0;
+      background: var(--teal);
+      color: #fff;
+      font-weight: 700;
+      border-radius: 12px;
+      padding: 0 1rem;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .hint { color: var(--muted); font-size: 0.78rem; margin: 0 0 0.8rem; }
+    .matches { display: grid; gap: 0.35rem; margin-bottom: 0.8rem; }
+    .matches button {
+      text-align: left;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 10px;
+      padding: 0.55rem 0.7rem;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .matches strong { font-family: var(--mono); }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 0.85rem 0.9rem;
+      margin-bottom: 0.7rem;
+    }
+    .site-id {
+      font-family: var(--mono);
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: var(--teal-deep);
+    }
+    .pair {
+      display: grid;
+      gap: 0.55rem;
+      margin-top: 0.7rem;
+    }
+    .role {
+      border-radius: 12px;
+      padding: 0.7rem 0.75rem;
+      border: 1px solid var(--line);
+    }
+    .role.nte { background: #e0f4f8; border-color: #b6dfe8; }
+    .role.te { background: #f3e8ff; border-color: #e9d5ff; }
+    .role.missing { background: #fff7ed; border-color: #f0d2a8; }
+    .role h2 {
+      margin: 0 0 0.45rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .role.nte h2 { color: var(--nte); }
+    .role.te h2 { color: var(--te); }
+    .role.missing h2 { color: var(--warn); }
+    .kv { display: grid; gap: 0.28rem; }
+    .kv div { display: grid; grid-template-columns: 6.2rem 1fr; gap: 0.35rem; font-size: 0.88rem; }
+    .kv span { color: var(--muted); }
+    .kv b { font-family: var(--mono); font-weight: 600; overflow-wrap: anywhere; }
+    .wo { margin-top: 0.55rem; padding-top: 0.55rem; border-top: 1px dashed rgba(0,0,0,0.08); }
+    .tag {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.12rem 0.4rem;
+      border-radius: 999px;
+      background: #fff;
+      color: var(--warn);
+      margin-left: 0.3rem;
+    }
+    .empty { color: var(--ink-soft); padding: 1rem 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="top">
+      <div>
+        <div class="eyebrow">Same OWS data</div>
+        <h1>Site lookup</h1>
+      </div>
+      <a class="back" href="./">Dashboard</a>
+    </div>
+  </header>
+  <div class="wrap">
+    <form class="search" id="form">
+      <input id="q" type="search" inputmode="numeric" enterkeyhint="search" placeholder="Site ID" autocomplete="off" />
+      <button class="go" type="submit">Show</button>
+    </form>
+    <p class="hint" id="meta">Enter a Site ID to see NTE / TE close time, FME, and WO.</p>
+    <div class="matches" id="matches"></div>
+    <div id="result"></div>
+  </div>
+  <script src="site-lookup.js?v=1786992519"></script>
+  <script>
+    (function () {
+      const data = window.SITE_LOOKUP;
+      const form = document.getElementById("form");
+      const input = document.getElementById("q");
+      const matchesEl = document.getElementById("matches");
+      const resultEl = document.getElementById("result");
+      const meta = document.getElementById("meta");
+
+      if (!data || !data.sites) {
+        resultEl.innerHTML = '<p class="empty">No lookup data yet. Open Get new data, wait 2–4 minutes, then Reload.</p>';
+        return;
+      }
+
+      const ids = Object.keys(data.sites);
+      meta.textContent = ids.length + " sites · updated " + (data.generatedAt || "—");
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        lookup(input.value);
+      });
+      input.addEventListener("input", function () {
+        suggest(input.value);
+      });
+
+      const startId = new URLSearchParams(location.search).get("id");
+      if (startId) {
+        input.value = startId;
+        lookup(startId);
+      } else {
+        input.focus();
+      }
+
+      function norm(s) {
+        return String(s || "").trim().toUpperCase();
+      }
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+      function shortSub(s) {
+        return String(s || "")
+          .replace("OGK ", "")
+          .replace(" /Book RRU/Easy Macro", "");
+      }
+      function suggest(raw) {
+        const q = norm(raw);
+        matchesEl.innerHTML = "";
+        if (q.length < 2) return;
+        const hits = ids.filter(function (id) { return norm(id).indexOf(q) !== -1; }).slice(0, 8);
+        hits.forEach(function (id) {
+          const site = data.sites[id];
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.innerHTML = "<strong>" + escapeHtml(id) + "</strong> · NTE " + site.nte.length + " · TE " + site.te.length;
+          btn.onclick = function () {
+            input.value = id;
+            lookup(id);
+          };
+          matchesEl.appendChild(btn);
+        });
+      }
+      function lookup(raw) {
+        const q = norm(raw);
+        resultEl.innerHTML = "";
+        if (!q) return;
+        let id = ids.find(function (x) { return norm(x) === q; });
+        if (!id) id = ids.find(function (x) { return norm(x) === q.replace(/^0+/, ""); });
+        if (!id) {
+          suggest(q);
+          resultEl.innerHTML = '<p class="empty">No site <strong>' + escapeHtml(raw) + "</strong> in the current extract.</p>";
+          return;
+        }
+        matchesEl.innerHTML = "";
+        const site = data.sites[id];
+        const url = new URL(location.href);
+        url.searchParams.set("id", id);
+        history.replaceState(null, "", url);
+        resultEl.innerHTML =
+          '<article class="card"><div class="site-id">Site ' + escapeHtml(id) + "</div>" +
+          '<div class="pair">' +
+            roleBlock("NTE", "nte", site.nte) +
+            roleBlock("TE", "te", site.te) +
+            (site.other && site.other.length ? roleBlock("Other", "missing", site.other) : "") +
+          "</div></article>";
+      }
+      function roleBlock(label, cls, rows) {
+        if (!rows || !rows.length) {
+          return '<div class="role missing"><h2>' + label + '</h2><div>No ' + label + " WO for this site.</div></div>";
+        }
+        return (
+          '<div class="role ' + cls + '"><h2>' + label + "</h2>" +
+          rows.map(function (row, i) {
+            const closed = row.completeTime || "Not closed";
+            const fme = row.fmeShort || row.assignTo || row.completeOperator || "—";
+            const wo = row.taskId || "—";
+            const extra = i === 0 ? "" : '<div class="wo"></div>';
+            return extra +
+              '<div class="kv">' +
+                "<div><span>Closed</span><b>" + escapeHtml(closed) + "</b></div>" +
+                "<div><span>" + label + " FME</span><b>" + escapeHtml(fme) + "</b></div>" +
+                "<div><span>" + label + " WO</span><b>" + escapeHtml(wo) +
+                  (row.exempt ? '<span class="tag">exempt</span>' : "") + "</b></div>" +
+                (row.taskSubcategory ? "<div><span>Type</span><b>" + escapeHtml(shortSub(row.taskSubcategory)) + "</b></div>" : "") +
+              "</div>";
+          }).join("") +
+          "</div>"
+        );
+      }
+    })();
+  </script>
+</body>
+</html>

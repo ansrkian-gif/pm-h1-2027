@@ -129,7 +129,7 @@
       background: currentColor;
       flex-shrink: 0;
     }
-    a.refresh-link, button.reload-link {
+    a.refresh-link, button.reload-link, a.nav-link {
       display: inline-flex;
       align-items: center;
       padding: 0.38rem 0.75rem;
@@ -146,7 +146,7 @@
       color: var(--teal-deep);
       border: 0;
     }
-    button.reload-link {
+    button.reload-link, a.nav-link {
       background: transparent;
       color: #fff;
       border: 1px solid rgba(255,255,255,0.55);
@@ -674,6 +674,7 @@
           <span class="dot"></span>
           <span id="overallStatusText">Loading…</span>
         </div>
+        <a class="nav-link" href="./site.html">Site lookup</a>
         <button type="button" class="reload-link" id="reloadBtn">Reload</button>
         <a class="refresh-link" href="https://github.com/ansrkian-gif/pm-h1-2027/issues/1" target="_blank" rel="noopener">Get new data</a>
       </div>
@@ -779,7 +780,7 @@
     <footer class="note" id="footerNote"></footer>
   </div>
 
-  <script src="dashboard-data.js?v=1786991618"></script>
+  <script src="dashboard-data.js?v=1786992519"></script>
   <div id="bootError" class="empty" style="display:none"></div>
   <script>
     (function () {
