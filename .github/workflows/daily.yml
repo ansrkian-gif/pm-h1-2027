@@ -69,7 +69,7 @@ jobs:
           python3 scripts/extract_data.py
           python3 -c "import json,os; open('dashboard/pin.js','w',encoding='utf-8').write('window.DASHBOARD_PIN=' + json.dumps(os.environ.get('DASHBOARD_PIN','')) + ';\n')"
           STAMP=$(date +%s)
-          sed -i "s/__BUILD_STAMP__/${STAMP}/g" dashboard/index.html dashboard/alert.html
+          sed -i "s/__BUILD_STAMP__/${STAMP}/g" dashboard/index.html dashboard/alert.html dashboard/site.html
           python3 scripts/daily_alert.py
       - name: Upload OWS screenshots if pull failed
         if: failure()
@@ -88,13 +88,13 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git clone --branch gh-pages --single-branch "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" _site
-          cp dashboard/index.html dashboard/alert.html dashboard/sw.js dashboard/pin-gate.js dashboard/manifest.webmanifest dashboard/404.html _site/
-          cp dashboard/dashboard-data.js dashboard/alert-data.js dashboard/pin.js _site/
+          cp dashboard/index.html dashboard/alert.html dashboard/site.html dashboard/sw.js dashboard/pin-gate.js dashboard/manifest.webmanifest dashboard/404.html _site/
+          cp dashboard/dashboard-data.js dashboard/alert-data.js dashboard/site-lookup.js dashboard/pin.js _site/
           mkdir -p _site/issues/1
           cp dashboard/issues/1/index.html _site/issues/1/
           touch _site/.nojekyll
           cd _site
-          git add index.html alert.html sw.js pin-gate.js pin.js manifest.webmanifest dashboard-data.js alert-data.js 404.html issues/1/index.html .nojekyll
+          git add index.html alert.html site.html sw.js pin-gate.js pin.js manifest.webmanifest dashboard-data.js alert-data.js site-lookup.js 404.html issues/1/index.html .nojekyll
           git diff --cached --quiet && echo "No page changes" && exit 0
           git commit -m "Daily OWS dashboard refresh"
           git push

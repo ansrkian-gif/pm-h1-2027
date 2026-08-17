@@ -12,7 +12,7 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   const skipCache =
     e.request.mode === "navigate" ||
-    /index\.html$|\/$|dashboard-data\.js|alert-data\.js|pin\.js|sw\.js/.test(url.pathname);
+    /index\.html$|site\.html$|\/$|dashboard-data\.js|site-lookup\.js|alert-data\.js|pin\.js|sw\.js/.test(url.pathname);
   if (skipCache) {
     e.respondWith(fetch(e.request, { cache: "no-store" }));
     return;

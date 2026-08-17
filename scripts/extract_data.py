@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -22,6 +23,7 @@ except ImportError:
 ROOT = Path(__file__).resolve().parent.parent
 DASH = ROOT / "dashboard"
 OUT = DASH / "dashboard-data.js"
+SITE_OUT = DASH / "site-lookup.js"
 
 CYCLE_START = "2026-08-01"
 CYCLE_END = "2027-01-31"
@@ -61,6 +63,82 @@ def short_name(operator: str) -> str:
     parts = operator.split("_")
     raw = parts[-1] if parts else operator
     return FME_ALIASES.get(raw, raw)
+
+
+def operator_role(operator: str) -> str:
+    u = str(operator or "").upper()
+    if "NTE" in u:
+        return "NTE"
+    if re.search(r"(^|_)TE(_|$)", u):
+        return "TE"
+    return "OTHER"
+
+
+def cell_complete(ct):
+    if isinstance(ct, datetime):
+        return ct.strftime("%Y-%m-%d %H:%M:%S"), ct.strftime("%Y-%m-%d")
+    if ct:
+        text = str(ct)
+        return text, text[:10]
+    return None, None
+
+
+def build_site_lookup(ws, headers: dict, exempt_ids: set[str], source_name: str) -> dict:
+    """All WOs by Site ID so the phone can look up NTE + TE for one site."""
+    task_col = resolve_task_id_col(headers)
+    sites: dict[str, dict] = {}
+
+    for r in range(2, ws.max_row + 1):
+        site_raw = ws.cell(r, headers["Site ID"]).value if "Site ID" in headers else None
+        site = str(site_raw).strip() if site_raw is not None else ""
+        if not site:
+            continue
+
+        op = ws.cell(r, headers["Complete Operator"]).value if "Complete Operator" in headers else None
+        name = str(op).strip() if op else ""
+        role = operator_role(name)
+        task_id = str(ws.cell(r, task_col).value or "").strip()
+        sub = ws.cell(r, headers["Task Subcategory"]).value if "Task Subcategory" in headers else None
+        status = ws.cell(r, headers["Task Status"]).value if "Task Status" in headers else None
+        complete_iso, complete_date = cell_complete(
+            ws.cell(r, headers["Complete Time"]).value if "Complete Time" in headers else None
+        )
+        title = ws.cell(r, headers["Title"]).value if "Title" in headers else None
+        assign = (
+            ws.cell(r, headers["Assign To FME Full Name"]).value
+            if "Assign To FME Full Name" in headers
+            else None
+        )
+        bucket = "nte" if role == "NTE" else "te" if role == "TE" else "other"
+        row = {
+            "taskId": task_id,
+            "title": str(title).strip() if title else "",
+            "taskSubcategory": str(sub).strip() if sub is not None else "",
+            "status": str(status).strip() if status else "",
+            "completeOperator": name,
+            "fmeShort": short_name(name) if name else "",
+            "completeTime": complete_iso,
+            "completeDate": complete_date,
+            "assignTo": str(assign).strip() if assign else "",
+            "exempt": task_id in exempt_ids,
+        }
+        entry = sites.setdefault(site, {"siteId": site, "nte": [], "te": [], "other": []})
+        entry[bucket].append(row)
+
+    def sort_rows(rows: list[dict]) -> list[dict]:
+        return sorted(rows, key=lambda x: x.get("completeTime") or "", reverse=True)
+
+    for entry in sites.values():
+        entry["nte"] = sort_rows(entry["nte"])
+        entry["te"] = sort_rows(entry["te"])
+        entry["other"] = sort_rows(entry["other"])
+
+    return {
+        "generatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "sourceFile": source_name,
+        "siteCount": len(sites),
+        "sites": dict(sorted(sites.items(), key=lambda kv: kv[0])),
+    }
 
 
 def is_small_cell(sub: str) -> bool:
@@ -251,16 +329,7 @@ def main() -> None:
         if task_id in exempt_ids:
             continue
 
-        ct = ws.cell(r, headers["Complete Time"]).value
-        if isinstance(ct, datetime):
-            complete_iso = ct.strftime("%Y-%m-%d %H:%M:%S")
-            complete_date = ct.strftime("%Y-%m-%d")
-        elif ct:
-            complete_iso = str(ct)
-            complete_date = str(ct)[:10]
-        else:
-            complete_iso = None
-            complete_date = None
+        complete_iso, complete_date = cell_complete(ws.cell(r, headers["Complete Time"]).value)
 
         name = str(op).strip()
         sub = ws.cell(r, headers["Task Subcategory"]).value
@@ -284,6 +353,7 @@ def main() -> None:
         )
 
     site_checks = build_site_checks(ws, headers, exempt_ids)
+    site_lookup = build_site_lookup(ws, headers, exempt_ids, xlsx.name)
     fme_counts = Counter(rec["fmeShort"] for rec in records)
     payload = {
         "generatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -304,7 +374,12 @@ def main() -> None:
         "window.DASHBOARD_DATA = " + json.dumps(payload, ensure_ascii=False, indent=2) + ";\n",
         encoding="utf-8",
     )
+    SITE_OUT.write_text(
+        "window.SITE_LOOKUP = " + json.dumps(site_lookup, ensure_ascii=False) + ";\n",
+        encoding="utf-8",
+    )
     print(f"Wrote {OUT.name} from {xlsx.name}")
+    print(f"Wrote {SITE_OUT.name} ({site_lookup['siteCount']} sites)")
     print(f"NTE WOs (after exemptions): {len(records)} | FMEs: {len(fme_counts)}")
     for name, count in fme_counts.most_common():
         print(f"  {count:3d}  {name}")
