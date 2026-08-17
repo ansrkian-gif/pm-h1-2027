@@ -27,11 +27,11 @@ jobs:
       )
     runs-on: ubuntu-latest
     steps:
-      - name: Close refresh request
+      - name: Note refresh request
         if: github.event_name == 'issues' || github.event_name == 'issue_comment'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh issue close ${{ github.event.issue.number }} --repo ${{ github.repository }} --comment "Refresh started. Reload the phone page in 2-4 minutes (PIN 4221)."
+        run: gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "Refresh started. Reload the phone page in 2-4 minutes (PIN 4221)."
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
