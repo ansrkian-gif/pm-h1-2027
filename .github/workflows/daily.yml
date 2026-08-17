@@ -29,9 +29,15 @@ jobs:
     steps:
       - name: Note refresh request
         if: github.event_name == 'issues' || github.event_name == 'issue_comment'
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "Refresh started. Reload the phone page in 2-4 minutes (PIN 4221)."
+        run: |
+          for i in 1 2 3; do
+            gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "Refresh started. Come back to the dashboard, wait 2-4 minutes, then tap Reload (PIN 4221)." && exit 0
+            sleep 8
+          done
+          echo "Could not post issue comment; continuing refresh anyway."
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
