@@ -1,5 +1,5 @@
 window.ALERT_DATA = {
-  "id": "2026-08-23-21-0-0-53-1787499086",
+  "id": "2026-08-24-21-0-1-53-1787586551",
   "friday": false,
   "closed": 21,
   "target": 21,
@@ -14,17 +14,24 @@ window.ALERT_DATA = {
     "Peter 3/3",
     "Saji 3/3"
   ],
-  "date": "2026-08-23",
-  "dayName": "Sun 23 Aug",
-  "generatedAt": "2026-08-23 15:31:26",
-  "incompletePairCount": 0,
-  "missingPassiveCount": 0,
+  "date": "2026-08-24",
+  "dayName": "Mon 24 Aug",
+  "generatedAt": "2026-08-24 15:49:11",
+  "incompletePairCount": 1,
+  "missingPassiveCount": 1,
   "missingActiveCount": 0,
-  "incompletePairSites": [],
+  "incompletePairSites": [
+    {
+      "siteId": "3710",
+      "missing": [
+        "OGK Passive General"
+      ]
+    }
+  ],
   "smallCellSiteCount": 7,
   "smallCellWoCount": 7,
   "smallCellDuplicateCount": 0,
-  "pairCompleteCount": 334,
+  "pairCompleteCount": 354,
   "exemptedWoCount": 106,
   "exemptedSiteIdCount": 53
 };
