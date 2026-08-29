@@ -1,5 +1,5 @@
 window.DASHBOARD_DATA = {
-  "generatedAt": "2026-08-29 13:46:48",
+  "generatedAt": "2026-08-29 18:20:57",
   "sourceFile": "extract.xlsx",
   "cycle": {
     "start": "2026-08-01",
@@ -13,7 +13,7 @@ window.DASHBOARD_DATA = {
   },
   "fmeTotals": {
     "Javeed": 67,
-    "Mohd+Nabi": 63,
+    "Mohd+Nabi": 64,
     "Azzam": 62,
     "Saji": 61,
     "Peter": 59,
@@ -31,8 +31,8 @@ window.DASHBOARD_DATA = {
       "smallCellExpectedEntries": 1
     },
     "subcategoryTotals": {
-      "OGK Active General": 416,
-      "OGK Passive General": 415,
+      "OGK Active General": 417,
+      "OGK Passive General": 416,
       "OGK Active Small Cell /Book RRU/Easy Macro": 7
     },
     "smallCell": {
@@ -80,7 +80,7 @@ window.DASHBOARD_DATA = {
       "duplicateCount": 0
     },
     "generalPairs": {
-      "completeSiteCount": 415,
+      "completeSiteCount": 416,
       "incompleteSiteCount": 0,
       "missingPassiveCount": 0,
       "missingActiveCount": 0,
@@ -948,7 +948,7 @@ window.DASHBOARD_DATA = {
       ]
     },
     "otherSiteCount": 0,
-    "totalSites": 422
+    "totalSites": 423
   },
   "workOrders": [
     {
@@ -1092,6 +1092,18 @@ window.DASHBOARD_DATA = {
       "completeOperator": "P5-1_PM_NTE_SBK_Nabi",
       "fmeShort": "Mohd+Nabi",
       "completeTime": "2026-08-29 10:52:12",
+      "completeDate": "2026-08-29",
+      "assignTo": "Nabijohn Piyarjan Piyarjan"
+    },
+    {
+      "taskId": "PM-20260828-00000151",
+      "title": "3626_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "3626",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Nabi",
+      "fmeShort": "Mohd+Nabi",
+      "completeTime": "2026-08-29 18:27:22",
       "completeDate": "2026-08-29",
       "assignTo": "Nabijohn Piyarjan Piyarjan"
     },
