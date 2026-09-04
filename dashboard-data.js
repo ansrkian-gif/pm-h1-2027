@@ -1,5 +1,5 @@
 window.DASHBOARD_DATA = {
-  "generatedAt": "2026-09-03 18:30:50",
+  "generatedAt": "2026-09-04 18:17:18",
   "sourceFile": "extract.xlsx",
   "cycle": {
     "start": "2026-08-01",
@@ -519,16 +519,16 @@ window.DASHBOARD_DATA = {
           "completeOperator": "P5-1_PM_NTE_SBK_Azzam"
         },
         {
-          "taskId": "PM-20260802-00000084",
-          "siteId": "3523",
-          "taskSubcategory": "OGK Passive General",
-          "completeOperator": "P5-1_PM_NTE_SBK_Saji"
-        },
-        {
           "taskId": "PM-20260802-00000085",
           "siteId": "2671",
           "taskSubcategory": "OGK Passive General",
           "completeOperator": "P5-1_PM_NTE_SBK_Peter"
+        },
+        {
+          "taskId": "PM-20260802-00000084",
+          "siteId": "3523",
+          "taskSubcategory": "OGK Passive General",
+          "completeOperator": "P5-1_PM_NTE_SBK_Saji"
         },
         {
           "taskId": "PM-20260802-00000083",
@@ -579,16 +579,16 @@ window.DASHBOARD_DATA = {
           "completeOperator": "P5-1_PM_TE_SBK_Gurwinder"
         },
         {
-          "taskId": "PM-20260802-00000074",
-          "siteId": "2828",
-          "taskSubcategory": "OGK Passive General",
-          "completeOperator": "P5-1_PM_NTE_SBK_Peter"
-        },
-        {
           "taskId": "PM-20260802-00000075",
           "siteId": "4735",
           "taskSubcategory": "OGK Active General",
           "completeOperator": "P5-1_PM_TE_SBK_Gurwinder"
+        },
+        {
+          "taskId": "PM-20260802-00000074",
+          "siteId": "2828",
+          "taskSubcategory": "OGK Passive General",
+          "completeOperator": "P5-1_PM_NTE_SBK_Peter"
         },
         {
           "taskId": "PM-20260802-00000072",
@@ -627,16 +627,16 @@ window.DASHBOARD_DATA = {
           "completeOperator": "P5-1_PM_TE_SBK_Malkeet"
         },
         {
-          "taskId": "PM-20260802-00000061",
-          "siteId": "3636",
-          "taskSubcategory": "OGK Active General",
-          "completeOperator": "P5-1_PM_TE_SBK_Gurpreet"
-        },
-        {
           "taskId": "PM-20260802-00000062",
           "siteId": "4830",
           "taskSubcategory": "OGK Passive General",
           "completeOperator": "P5-1_PM_NTE_SBK_AbdulNazar"
+        },
+        {
+          "taskId": "PM-20260802-00000061",
+          "siteId": "3636",
+          "taskSubcategory": "OGK Active General",
+          "completeOperator": "P5-1_PM_TE_SBK_Gurpreet"
         },
         {
           "taskId": "PM-20260802-00000060",
@@ -777,14 +777,14 @@ window.DASHBOARD_DATA = {
           "completeOperator": "P5-1_PM_TE_SBK_Gurwinder"
         },
         {
-          "taskId": "PM-20260801-00000078",
-          "siteId": "1804",
+          "taskId": "PM-20260801-00000079",
+          "siteId": "5957",
           "taskSubcategory": "OGK Passive General",
           "completeOperator": "P5-1_PM_NTE_SBK_Peter"
         },
         {
-          "taskId": "PM-20260801-00000079",
-          "siteId": "5957",
+          "taskId": "PM-20260801-00000078",
+          "siteId": "1804",
           "taskSubcategory": "OGK Passive General",
           "completeOperator": "P5-1_PM_NTE_SBK_Peter"
         },
