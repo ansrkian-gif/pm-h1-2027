@@ -1,23 +1,22 @@
 window.ALERT_DATA = {
-  "id": "2026-09-06-21-1-0-53-1788716182",
+  "id": "2026-09-07-21-0-0-53-1788808012",
   "friday": false,
   "closed": 21,
   "target": 21,
   "achieved": true,
-  "behind": [
-    "Mohd+Nabi 2/3 (-1)"
-  ],
+  "behind": [],
   "on_track": [
     "AbdulNazar 3/3",
     "Azzam 3/3",
-    "Eldo 4/3",
+    "Eldo 3/3",
     "Javeed 3/3",
+    "Mohd+Nabi 3/3",
     "Peter 3/3",
     "Saji 3/3"
   ],
-  "date": "2026-09-06",
-  "dayName": "Sun 06 Sep",
-  "generatedAt": "2026-09-06 17:36:22",
+  "date": "2026-09-07",
+  "dayName": "Mon 07 Sep",
+  "generatedAt": "2026-09-07 19:06:52",
   "incompletePairCount": 0,
   "missingPassiveCount": 0,
   "missingActiveCount": 0,
@@ -25,7 +24,7 @@ window.ALERT_DATA = {
   "smallCellSiteCount": 8,
   "smallCellWoCount": 8,
   "smallCellDuplicateCount": 0,
-  "pairCompleteCount": 560,
+  "pairCompleteCount": 581,
   "exemptedWoCount": 106,
   "exemptedSiteIdCount": 53
 };
