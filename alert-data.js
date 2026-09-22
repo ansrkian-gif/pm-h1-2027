@@ -1,5 +1,5 @@
 window.ALERT_DATA = {
-  "id": "2026-09-21-25-0-0-53-1790020648",
+  "id": "2026-09-22-25-0-0-53-1790102701",
   "friday": false,
   "closed": 25,
   "target": 21,
@@ -8,23 +8,23 @@ window.ALERT_DATA = {
   "on_track": [
     "AbdulNazar 3/3",
     "Azzam 4/3",
-    "Eldo 4/3",
+    "Eldo 3/3",
     "Javeed 4/3",
-    "Mohd+Nabi 3/3",
+    "Mohd+Nabi 4/3",
     "Peter 3/3",
     "Saji 4/3"
   ],
-  "date": "2026-09-21",
-  "dayName": "Mon 21 Sep",
-  "generatedAt": "2026-09-21 19:57:28",
+  "date": "2026-09-22",
+  "dayName": "Tue 22 Sep",
+  "generatedAt": "2026-09-22 18:45:01",
   "incompletePairCount": 0,
   "missingPassiveCount": 0,
   "missingActiveCount": 0,
   "incompletePairSites": [],
-  "smallCellSiteCount": 8,
-  "smallCellWoCount": 8,
+  "smallCellSiteCount": 9,
+  "smallCellWoCount": 9,
   "smallCellDuplicateCount": 0,
-  "pairCompleteCount": 867,
+  "pairCompleteCount": 891,
   "exemptedWoCount": 106,
   "exemptedSiteIdCount": 53
 };
