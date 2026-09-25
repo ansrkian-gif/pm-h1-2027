@@ -1,5 +1,5 @@
 window.DASHBOARD_DATA = {
-  "generatedAt": "2026-09-24 19:01:10",
+  "generatedAt": "2026-09-25 19:13:49",
   "sourceFile": "extract.xlsx",
   "cycle": {
     "start": "2026-08-01",
@@ -14,7 +14,7 @@ window.DASHBOARD_DATA = {
   "fmeTotals": {
     "Javeed": 149,
     "Azzam": 143,
-    "Saji": 141,
+    "Saji": 143,
     "Mohd+Nabi": 140,
     "Eldo": 129,
     "Peter": 129,
@@ -31,8 +31,8 @@ window.DASHBOARD_DATA = {
       "smallCellExpectedEntries": 1
     },
     "subcategoryTotals": {
-      "OGK Active General": 944,
-      "OGK Passive General": 943,
+      "OGK Active General": 946,
+      "OGK Passive General": 945,
       "OGK Active Small Cell /Book RRU/Easy Macro": 9
     },
     "smallCell": {
@@ -90,7 +90,7 @@ window.DASHBOARD_DATA = {
       "duplicateCount": 0
     },
     "generalPairs": {
-      "completeSiteCount": 938,
+      "completeSiteCount": 940,
       "incompleteSiteCount": 0,
       "missingPassiveCount": 0,
       "missingActiveCount": 0,
@@ -958,9 +958,33 @@ window.DASHBOARD_DATA = {
       ]
     },
     "otherSiteCount": 0,
-    "totalSites": 947
+    "totalSites": 949
   },
   "workOrders": [
+    {
+      "taskId": "PM-20260924-00000146",
+      "title": "2032_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "2032",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Saji",
+      "fmeShort": "Saji",
+      "completeTime": "2026-09-25 12:42:15",
+      "completeDate": "2026-09-25",
+      "assignTo": "Saji Joseph"
+    },
+    {
+      "taskId": "PM-20260924-00000144",
+      "title": "2690_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "2690",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Saji",
+      "fmeShort": "Saji",
+      "completeTime": "2026-09-25 14:51:21",
+      "completeDate": "2026-09-25",
+      "assignTo": "Saji Joseph"
+    },
     {
       "taskId": "PM-20260924-00000085",
       "title": "4925_OGK Active and Passive Routine Maintenance_2027-01-31",
