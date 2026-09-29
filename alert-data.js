@@ -1,37 +1,30 @@
 window.ALERT_DATA = {
-  "id": "2026-09-29-0-7-1-53-1790629949",
+  "id": "2026-09-29-25-0-0-53-1790711801",
   "friday": false,
-  "closed": 0,
+  "closed": 25,
   "target": 21,
-  "achieved": false,
-  "behind": [
-    "AbdulNazar 0/3 (-3)",
-    "Azzam 0/3 (-3)",
-    "Eldo 0/3 (-3)",
-    "Javeed 0/3 (-3)",
-    "Mohd+Nabi 0/3 (-3)",
-    "Peter 0/3 (-3)",
-    "Saji 0/3 (-3)"
+  "achieved": true,
+  "behind": [],
+  "on_track": [
+    "AbdulNazar 3/3",
+    "Azzam 4/3",
+    "Eldo 3/3",
+    "Javeed 4/3",
+    "Mohd+Nabi 4/3",
+    "Peter 3/3",
+    "Saji 4/3"
   ],
-  "on_track": [],
   "date": "2026-09-29",
   "dayName": "Tue 29 Sep",
-  "generatedAt": "2026-09-28 21:12:29",
-  "incompletePairCount": 1,
+  "generatedAt": "2026-09-29 19:56:41",
+  "incompletePairCount": 0,
   "missingPassiveCount": 0,
-  "missingActiveCount": 1,
-  "incompletePairSites": [
-    {
-      "siteId": "0129",
-      "missing": [
-        "OGK Active General"
-      ]
-    }
-  ],
+  "missingActiveCount": 0,
+  "incompletePairSites": [],
   "smallCellSiteCount": 10,
   "smallCellWoCount": 10,
   "smallCellDuplicateCount": 0,
-  "pairCompleteCount": 1011,
+  "pairCompleteCount": 1037,
   "exemptedWoCount": 106,
   "exemptedSiteIdCount": 53
 };
