@@ -1,5 +1,5 @@
 window.ALERT_DATA = {
-  "id": "2026-09-29-25-0-0-53-1790711801",
+  "id": "2026-09-30-25-0-0-53-1790798189",
   "friday": false,
   "closed": 25,
   "target": 21,
@@ -14,9 +14,9 @@ window.ALERT_DATA = {
     "Peter 3/3",
     "Saji 4/3"
   ],
-  "date": "2026-09-29",
-  "dayName": "Tue 29 Sep",
-  "generatedAt": "2026-09-29 19:56:41",
+  "date": "2026-09-30",
+  "dayName": "Wed 30 Sep",
+  "generatedAt": "2026-09-30 19:56:29",
   "incompletePairCount": 0,
   "missingPassiveCount": 0,
   "missingActiveCount": 0,
@@ -24,7 +24,7 @@ window.ALERT_DATA = {
   "smallCellSiteCount": 10,
   "smallCellWoCount": 10,
   "smallCellDuplicateCount": 0,
-  "pairCompleteCount": 1037,
+  "pairCompleteCount": 1062,
   "exemptedWoCount": 106,
   "exemptedSiteIdCount": 53
 };
