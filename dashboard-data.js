@@ -1,5 +1,5 @@
 window.DASHBOARD_DATA = {
-  "generatedAt": "2026-10-08 20:40:07",
+  "generatedAt": "2026-10-09 20:05:00",
   "sourceFile": "extract.xlsx",
   "cycle": {
     "start": "2026-08-01",
