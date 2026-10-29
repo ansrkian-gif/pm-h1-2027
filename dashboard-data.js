@@ -1,5 +1,5 @@
 window.DASHBOARD_DATA = {
-  "generatedAt": "2026-10-28 20:12:48",
+  "generatedAt": "2026-10-29 20:11:49",
   "sourceFile": "extract.xlsx",
   "cycle": {
     "start": "2026-08-01",
@@ -12,11 +12,11 @@ window.DASHBOARD_DATA = {
     "excludeWeekday": 5
   },
   "fmeTotals": {
-    "Javeed": 260,
-    "Saji": 258,
-    "Eldo": 246,
-    "Peter": 242,
-    "Azzam": 235,
+    "Javeed": 264,
+    "Saji": 262,
+    "Eldo": 250,
+    "Peter": 246,
+    "Azzam": 239,
     "AbdulNazar": 161,
     "Mohd+Nabi": 157
   },
@@ -31,17 +31,22 @@ window.DASHBOARD_DATA = {
       "smallCellExpectedEntries": 1
     },
     "subcategoryTotals": {
-      "OGK Active General": 1557,
-      "OGK Passive General": 1531,
-      "OGK Active Small Cell /Book RRU/Easy Macro": 28
+      "OGK Active General": 1575,
+      "OGK Passive General": 1549,
+      "OGK Active Small Cell /Book RRU/Easy Macro": 30
     },
     "smallCell": {
       "label": "OGK Active Small Cell /Book RRU/Easy Macro",
-      "woCount": 28,
-      "siteCount": 28,
+      "woCount": 30,
+      "siteCount": 30,
       "sites": [
         {
           "siteId": "1212",
+          "woCount": 1,
+          "subcategory": "OGK Active Small Cell /Book RRU/Easy Macro"
+        },
+        {
+          "siteId": "2447",
           "woCount": 1,
           "subcategory": "OGK Active Small Cell /Book RRU/Easy Macro"
         },
@@ -62,6 +67,11 @@ window.DASHBOARD_DATA = {
         },
         {
           "siteId": "4430",
+          "woCount": 1,
+          "subcategory": "OGK Active Small Cell /Book RRU/Easy Macro"
+        },
+        {
+          "siteId": "4438",
           "woCount": 1,
           "subcategory": "OGK Active Small Cell /Book RRU/Easy Macro"
         },
@@ -185,7 +195,7 @@ window.DASHBOARD_DATA = {
       "duplicateCount": 0
     },
     "generalPairs": {
-      "completeSiteCount": 1522,
+      "completeSiteCount": 1540,
       "incompleteSiteCount": 0,
       "missingPassiveCount": 0,
       "missingActiveCount": 0,
@@ -1053,9 +1063,249 @@ window.DASHBOARD_DATA = {
       ]
     },
     "otherSiteCount": 0,
-    "totalSites": 1550
+    "totalSites": 1570
   },
   "workOrders": [
+    {
+      "taskId": "PM-20261029-00000120",
+      "title": "2447_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "2447",
+      "taskSubcategory": "OGK Active Small Cell /Book RRU/Easy Macro",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Azzam",
+      "fmeShort": "Azzam",
+      "completeTime": "2026-10-29 14:59:26",
+      "completeDate": "2026-10-29",
+      "assignTo": "Azzam Mushtaque M M Ali Momin"
+    },
+    {
+      "taskId": "PM-20261029-00000119",
+      "title": "4438_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "4438",
+      "taskSubcategory": "OGK Active Small Cell /Book RRU/Easy Macro",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Eldo",
+      "fmeShort": "Eldo",
+      "completeTime": "2026-10-29 11:54:30",
+      "completeDate": "2026-10-29",
+      "assignTo": "Eldo Chundattu Varghese"
+    },
+    {
+      "taskId": "PM-20261029-00000117",
+      "title": "2446_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "2446",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Peter",
+      "fmeShort": "Peter",
+      "completeTime": "2026-10-29 14:25:42",
+      "completeDate": "2026-10-29",
+      "assignTo": "Peter Kunnath M K Mathai"
+    },
+    {
+      "taskId": "PM-20261029-00000113",
+      "title": "2396_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "2396",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Peter",
+      "fmeShort": "Peter",
+      "completeTime": "2026-10-29 16:07:10",
+      "completeDate": "2026-10-29",
+      "assignTo": "Peter Kunnath M K Mathai"
+    },
+    {
+      "taskId": "PM-20261029-00000111",
+      "title": "2702_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "2702",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Peter",
+      "fmeShort": "Peter",
+      "completeTime": "2026-10-29 12:36:56",
+      "completeDate": "2026-10-29",
+      "assignTo": "Peter Kunnath M K Mathai"
+    },
+    {
+      "taskId": "PM-20261029-00000100",
+      "title": "3656_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "3656",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Saji",
+      "fmeShort": "Saji",
+      "completeTime": "2026-10-29 14:07:38",
+      "completeDate": "2026-10-29",
+      "assignTo": "Saji Joseph"
+    },
+    {
+      "taskId": "PM-20261029-00000095",
+      "title": "3872_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "3872",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Saji",
+      "fmeShort": "Saji",
+      "completeTime": "2026-10-29 09:45:34",
+      "completeDate": "2026-10-29",
+      "assignTo": "Saji Joseph"
+    },
+    {
+      "taskId": "PM-20261029-00000094",
+      "title": "3749_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "3749",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Saji",
+      "fmeShort": "Saji",
+      "completeTime": "2026-10-29 11:47:16",
+      "completeDate": "2026-10-29",
+      "assignTo": "Saji Joseph"
+    },
+    {
+      "taskId": "PM-20261029-00000091",
+      "title": "3311_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "3311",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Saji",
+      "fmeShort": "Saji",
+      "completeTime": "2026-10-29 16:26:01",
+      "completeDate": "2026-10-29",
+      "assignTo": "Saji Joseph"
+    },
+    {
+      "taskId": "PM-20261029-00000081",
+      "title": "3576_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "3576",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Javeed",
+      "fmeShort": "Javeed",
+      "completeTime": "2026-10-29 08:43:20",
+      "completeDate": "2026-10-29",
+      "assignTo": "Mohammed Javeed Shaik"
+    },
+    {
+      "taskId": "PM-20261029-00000079",
+      "title": "1102_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "1102",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Peter",
+      "fmeShort": "Peter",
+      "completeTime": "2026-10-29 10:07:08",
+      "completeDate": "2026-10-29",
+      "assignTo": "Peter Kunnath M K Mathai"
+    },
+    {
+      "taskId": "PM-20261029-00000075",
+      "title": "3025_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "3025",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Javeed",
+      "fmeShort": "Javeed",
+      "completeTime": "2026-10-29 10:59:43",
+      "completeDate": "2026-10-29",
+      "assignTo": "Mohammed Javeed Shaik"
+    },
+    {
+      "taskId": "PM-20261029-00000074",
+      "title": "1545_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "1545",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Eldo",
+      "fmeShort": "Eldo",
+      "completeTime": "2026-10-29 11:10:34",
+      "completeDate": "2026-10-29",
+      "assignTo": "Eldo Chundattu Varghese"
+    },
+    {
+      "taskId": "PM-20261029-00000071",
+      "title": "3063_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "3063",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Javeed",
+      "fmeShort": "Javeed",
+      "completeTime": "2026-10-29 15:31:07",
+      "completeDate": "2026-10-29",
+      "assignTo": "Mohammed Javeed Shaik"
+    },
+    {
+      "taskId": "PM-20261029-00000070",
+      "title": "1517_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "1517",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Javeed",
+      "fmeShort": "Javeed",
+      "completeTime": "2026-10-29 13:03:38",
+      "completeDate": "2026-10-29",
+      "assignTo": "Mohammed Javeed Shaik"
+    },
+    {
+      "taskId": "PM-20261029-00000068",
+      "title": "3870_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "3870",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Azzam",
+      "fmeShort": "Azzam",
+      "completeTime": "2026-10-29 12:34:20",
+      "completeDate": "2026-10-29",
+      "assignTo": "Azzam Mushtaque M M Ali Momin"
+    },
+    {
+      "taskId": "PM-20261029-00000066",
+      "title": "3337_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "3337",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Azzam",
+      "fmeShort": "Azzam",
+      "completeTime": "2026-10-29 10:35:04",
+      "completeDate": "2026-10-29",
+      "assignTo": "Azzam Mushtaque M M Ali Momin"
+    },
+    {
+      "taskId": "PM-20261029-00000063",
+      "title": "1550_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "1550",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Eldo",
+      "fmeShort": "Eldo",
+      "completeTime": "2026-10-29 14:08:29",
+      "completeDate": "2026-10-29",
+      "assignTo": "Eldo Chundattu Varghese"
+    },
+    {
+      "taskId": "PM-20261029-00000059",
+      "title": "3653_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "3653",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Azzam",
+      "fmeShort": "Azzam",
+      "completeTime": "2026-10-29 08:44:27",
+      "completeDate": "2026-10-29",
+      "assignTo": "Azzam Mushtaque M M Ali Momin"
+    },
+    {
+      "taskId": "PM-20261029-00000056",
+      "title": "1713_OGK Active and Passive Routine Maintenance_2027-01-31",
+      "siteId": "1713",
+      "taskSubcategory": "OGK Passive General",
+      "status": "completed",
+      "completeOperator": "P5-1_PM_NTE_SBK_Eldo",
+      "fmeShort": "Eldo",
+      "completeTime": "2026-10-29 09:04:40",
+      "completeDate": "2026-10-29",
+      "assignTo": "Eldo Chundattu Varghese"
+    },
     {
       "taskId": "PM-20261028-00000098",
       "title": "3666_OGK Active and Passive Routine Maintenance_2027-01-31",
