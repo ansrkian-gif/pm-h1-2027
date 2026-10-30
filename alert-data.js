@@ -1,31 +1,15 @@
 window.ALERT_DATA = {
-  "id": "2026-10-29-20-2-0-53-1793304710",
-  "friday": false,
-  "closed": 20,
-  "target": 21,
-  "achieved": false,
-  "behind": [
-    "AbdulNazar 0/3 (-3)",
-    "Mohd+Nabi 0/3 (-3)"
-  ],
-  "on_track": [
-    "Azzam 4/3",
-    "Eldo 4/3",
-    "Javeed 4/3",
-    "Peter 4/3",
-    "Saji 4/3"
-  ],
-  "date": "2026-10-29",
-  "dayName": "Thu 29 Oct",
-  "generatedAt": "2026-10-29 20:11:50",
+  "id": "fri-2026-10-30-1793390119",
+  "friday": true,
+  "closed": 0,
+  "target": 0,
+  "achieved": true,
+  "behind": [],
+  "on_track": [],
+  "date": "2026-10-30",
+  "dayName": "Fri 30 Oct",
+  "generatedAt": "2026-10-30 19:55:19",
   "incompletePairCount": 0,
-  "missingPassiveCount": 0,
-  "missingActiveCount": 0,
-  "incompletePairSites": [],
   "smallCellSiteCount": 30,
-  "smallCellWoCount": 30,
-  "smallCellDuplicateCount": 0,
-  "pairCompleteCount": 1540,
-  "exemptedWoCount": 106,
-  "exemptedSiteIdCount": 53
+  "smallCellWoCount": 30
 };
