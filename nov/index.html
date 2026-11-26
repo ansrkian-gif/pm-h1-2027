@@ -239,7 +239,7 @@
         <p class="sub" id="subline">Minimum 4 work orders each day</p>
       </div>
       <div class="actions">
-        <a class="update" href="https://github.com/ansrkian-gif/pm-h1-2027/issues/1">Update now</a>
+        <a class="update" id="refresh" href="https://github.com/ansrkian-gif/pm-h1-2027/issues/new?title=refresh&body=refresh">Refresh</a>
         <button class="reload" type="button" id="reload">Reload</button>
       </div>
     </div>
@@ -250,10 +250,14 @@
       var data = window.DASHBOARD_DATA;
       var app = document.getElementById("app");
       document.getElementById("reload").onclick = function () {
+        sessionStorage.removeItem("pm-refresh-at");
         var url = new URL(location.href);
         url.searchParams.set("t", Date.now());
         location.replace(url.toString());
       };
+      document.getElementById("refresh").addEventListener("click", function () {
+        sessionStorage.setItem("pm-refresh-at", String(Date.now()));
+      });
       if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
         navigator.serviceWorker.register("sw.js").catch(function () {});
       }
@@ -297,6 +301,11 @@
         var html = "";
         document.getElementById("subline").textContent =
           prettyDate(data.periodStart) + " through " + (data.todayLabel || "today") + " · updated " + (data.generatedAt || "");
+
+        var started = Number(sessionStorage.getItem("pm-refresh-at") || 0);
+        if (started && Date.now() - started < 15 * 60 * 1000) {
+          html += '<div class="banner"><strong>Refresh is running.</strong>You can lock the phone. In about 3 minutes the full-screen popup arrives with today\'s count. Then open this page and tap Reload.</div>';
+        }
 
         if (waiting) {
           html += '<div class="banner"><strong>No work orders from ' + esc(prettyDate(data.periodStart)) + ' yet.</strong>Each FME needs at least 4 completed work orders every working day. This page updates by itself at 8:00 PM.</div>';
@@ -368,7 +377,7 @@
         html += '<section class="card"><h2>How this page updates</h2><ul class="rules">';
         (data.rules || []).forEach(function (rule) { html += "<li>" + esc(rule) + "</li>"; });
         html += "<li>Every day at 8:00 PM the cloud downloads the work orders, updates this page, and sends one full-screen popup with that day's count for each FME.</li>";
-        html += "<li>To update now, tap Update now, send the word refresh, wait about 3 minutes, then tap Reload.</li>";
+        html += "<li>Tap Refresh, then Submit on the GitHub page. You can lock the phone. When the update finishes, the same popup arrives. Then open this page and tap Reload.</li>";
         html += "</ul>";
         if (data.sourceFile) html += '<p class="src">Source ' + esc(data.sourceFile) + "</p>";
         html += "</section>";
