@@ -111,9 +111,29 @@ function Read-WorkOrders([string]$path) {
         $ssText = Read-Entry "xl/sharedStrings.xml"
         $sheetText = Read-Entry "xl/worksheets/sheet1.xml"
         if (-not $sheetText) { throw "Excel file has no sheet1." }
+        function ConvertTo-SimpleXml([string]$text) {
+            $clean = [regex]::Replace($text, '\sxmlns="[^"]*"', "")
+            return [xml]$clean
+        }
+        function Get-CellText($cell, $strings) {
+            if (-not $cell) { return "" }
+            $kind = [string]$cell.t
+            if ($kind -eq "s") {
+                $val = [string]$cell.v
+                if ($val -eq "") { return "" }
+                return [string]$strings[[int]$val]
+            }
+            if ($kind -eq "inlineStr") {
+                if ($cell.is.t) { return [string]$cell.is.t }
+                $text = ""
+                foreach ($run in @($cell.is.r)) { $text += [string]$run.t }
+                return $text
+            }
+            return [string]$cell.v
+        }
         $strings = @()
-        if ($ssText) { $strings = @(Read-SharedStrings ([xml]$ssText)) }
-        $sheet = [xml]$sheetText
+        if ($ssText) { $strings = @(Read-SharedStrings (ConvertTo-SimpleXml $ssText)) }
+        $sheet = ConvertTo-SimpleXml $sheetText
     } finally {
         $zip.Dispose()
         Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue
@@ -122,32 +142,48 @@ function Read-WorkOrders([string]$path) {
     $rows = @($sheet.worksheet.sheetData.row)
     if ($rows.Count -eq 0) { return @() }
 
+    $headerRowIndex = 0
+    for ($h = 0; $h -lt [Math]::Min(8, $rows.Count); $h++) {
+        $blob = ""
+        foreach ($cell in @($rows[$h].c)) { $blob += " " + (Get-CellText $cell $strings) }
+        if ($blob -match "Task\s*Id" -and $blob -match "Complete") { $headerRowIndex = $h; break }
+    }
     $header = @{}
-    foreach ($cell in @($rows[0].c)) {
-        $ref = [string]$cell.r
-        $val = [string]$cell.v
-        $text = if ($cell.t -eq "s" -and $val -ne "") { $strings[[int]$val] } else { $val }
-        $header[$text.Trim()] = Get-ColNumber $ref
+    foreach ($cell in @($rows[$headerRowIndex].c)) {
+        $text = (Get-CellText $cell $strings).Trim()
+        if ($text) { $header[$text] = Get-ColNumber ([string]$cell.r) }
     }
-
-    $need = @("Task Id", "Task Type", "Task Status", "Task Category", "Assign To FME Full Name", "Complete Time", "Accept Operator", "Arrive Operator", "Complete Operator")
-    foreach ($name in $need) {
-        if (-not $header.ContainsKey($name)) { throw "Excel is missing the '$name' column." }
+    $aliases = @{
+        "Task Id" = @("Task Id", "Task ID", "TaskID")
+        "Task Type" = @("Task Type", "TaskType")
+        "Task Status" = @("Task Status", "Status")
+        "Task Category" = @("Task Category")
+        "Assign To FME Full Name" = @("Assign To FME Full Name", "Assign To")
+        "Complete Time" = @("Complete Time", "Completion Time")
+        "Accept Operator" = @("Accept Operator")
+        "Arrive Operator" = @("Arrive Operator")
+        "Complete Operator" = @("Complete Operator")
     }
+    $colOf = @{}
+    foreach ($canon in $aliases.Keys) {
+        foreach ($name in $aliases[$canon]) {
+            if ($header.ContainsKey($name)) { $colOf[$canon] = $header[$name]; break }
+        }
+        if (-not $colOf.ContainsKey($canon)) {
+            $found = ($header.Keys | Select-Object -First 25) -join ", "
+            throw "Excel is missing the '$canon' column. Found: $found"
+        }
+    }
+    $header = $colOf
 
     $orders = New-Object System.Collections.Generic.List[object]
     $seen = @{}
-    for ($i = 1; $i -lt $rows.Count; $i++) {
+    for ($i = $headerRowIndex + 1; $i -lt $rows.Count; $i++) {
         $vals = @{}
         foreach ($cell in @($rows[$i].c)) {
             $ref = [string]$cell.r
             if (-not $ref) { continue }
-            $col = Get-ColNumber $ref
-            $val = [string]$cell.v
-            $text = if ($cell.t -eq "s") {
-                if ($val -eq "") { "" } else { $strings[[int]$val] }
-            } else { $val }
-            $vals[$col] = $text
+            $vals[(Get-ColNumber $ref)] = Get-CellText $cell $strings
         }
         function Cell([string]$name) {
             $col = $header[$name]
