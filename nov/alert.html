@@ -13,8 +13,10 @@
   <style>
     * { box-sizing: border-box; }
     html, body { margin: 0; height: 100%; }
+    #screen { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     body {
       min-height: 100dvh;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -50,8 +52,8 @@
       padding: 0.45rem 0.75rem;
       min-height: 0;
     }
-    li b { font-size: clamp(1.15rem, 5.2vw, 1.7rem); line-height: 1.1; }
-    li span { font-size: clamp(1.7rem, 8vw, 2.6rem); font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    li b { font-size: clamp(1.35rem, 6vw, 2rem); line-height: 1.1; }
+    li span { font-size: clamp(2rem, 10vw, 3.2rem); font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
     li.miss { background: rgba(0,0,0,0.28); }
     .foot {
       margin-top: 0.45rem;
