@@ -367,7 +367,7 @@
 
         html += '<section class="card"><h2>How this page updates</h2><ul class="rules">';
         (data.rules || []).forEach(function (rule) { html += "<li>" + esc(rule) + "</li>"; });
-        html += "<li>Every day at 8:00 PM the cloud downloads the work orders and updates this page. The phone does not need the office Wi-Fi.</li>";
+        html += "<li>Every day at 8:00 PM the cloud downloads the work orders, updates this page, and sends one full-screen popup with that day's count for each FME.</li>";
         html += "<li>To update now, tap Update now, send the word refresh, wait about 3 minutes, then tap Reload.</li>";
         html += "</ul>";
         if (data.sourceFile) html += '<p class="src">Source ' + esc(data.sourceFile) + "</p>";
