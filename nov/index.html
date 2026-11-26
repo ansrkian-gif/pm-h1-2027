@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f3d3e" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="PM Nov 2027" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <title>PM from 1 Nov · Daily work orders</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <script>
+    (function () {
+      var v = Date.now();
+      ["pin.js", "pin-gate.js", "dashboard-data.js"].forEach(function (src) {
+        document.write('<script src="' + src + "?v=" + v + '"><\/script>');
+      });
+    })();
+  </script>
+  <style>
+    :root {
+      --bg: #e7f0ee;
+      --card: #fff;
+      --ink: #142523;
+      --muted: #5d706d;
+      --line: #d5e2de;
+      --teal: #0f6b66;
+      --deep: #0a3d3c;
+      --good: #1a7a4c;
+      --good-bg: #e5f6ec;
+      --watch: #9a5b08;
+      --watch-bg: #fff4e0;
+      --bad: #b42318;
+      --bad-bg: #fdecea;
+      --pad: max(0.85rem, env(safe-area-inset-left));
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; max-width: 100%; overflow-x: hidden; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      min-height: 100dvh;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--deep);
+      color: #f3faf8;
+      padding: max(0.55rem, env(safe-area-inset-top)) var(--pad) 0.75rem;
+    }
+    .top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.6rem;
+    }
+    .eyebrow {
+      margin: 0;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #9fd4cf;
+      font-weight: 700;
+    }
+    h1 {
+      margin: 0.1rem 0 0;
+      font-size: 1.25rem;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+    .sub { margin: 0.2rem 0 0; color: #d5e8e4; font-size: 0.84rem; }
+    .actions { display: flex; flex-direction: column; gap: 0.35rem; flex: 0 0 auto; }
+    a.update, button.reload {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font: inherit;
+      font-weight: 800;
+      font-size: 0.85rem;
+      border-radius: 999px;
+      padding: 0.55rem 0.85rem;
+      min-height: 44px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    a.update { background: #fff; color: var(--deep); }
+    button.reload {
+      border: 1px solid rgba(255,255,255,.45);
+      background: transparent;
+      color: #fff;
+    }
+    main {
+      width: min(760px, 100%);
+      margin: 0 auto;
+      padding: 0.8rem var(--pad) calc(1.4rem + env(safe-area-inset-bottom));
+    }
+    .banner {
+      background: #fff8eb;
+      border: 1px solid #f0d7a8;
+      color: #7a4b09;
+      border-radius: 14px;
+      padding: 0.85rem 0.9rem;
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+    .banner strong { display: block; font-size: 1.02rem; margin-bottom: 0.15rem; }
+    .kpis {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      margin-bottom: 0.75rem;
+    }
+    .kpi, .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 4px 14px rgba(15, 61, 62, 0.05);
+    }
+    .kpi { padding: 0.75rem 0.8rem 0.85rem; min-width: 0; }
+    .kpi span { display: block; color: var(--muted); font-size: 0.75rem; font-weight: 700; }
+    .kpi b {
+      display: block;
+      margin-top: 0.15rem;
+      font-size: 1.7rem;
+      letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+    .kpi small { color: var(--muted); font-size: 0.75rem; }
+    .card { padding: 0.85rem 0.85rem 0.95rem; margin-bottom: 0.7rem; }
+    .card h2 { margin: 0 0 0.55rem; font-size: 1rem; }
+    .note { margin: 0.45rem 0 0; color: var(--muted); font-size: 0.82rem; line-height: 1.4; }
+    .row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.35rem 0.6rem;
+      align-items: center;
+      padding: 0.55rem 0;
+      border-top: 1px solid var(--line);
+    }
+    .row:first-of-type { border-top: 0; }
+    .who { font-weight: 700; min-width: 0; }
+    .who small { display: block; font-weight: 600; color: var(--muted); }
+    .score {
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      font-size: 1.15rem;
+      text-align: right;
+    }
+    .score.good { color: var(--good); }
+    .score.bad { color: var(--bad); }
+    .bar {
+      grid-column: 1 / -1;
+      height: 8px;
+      border-radius: 99px;
+      background: #edf2f1;
+      overflow: hidden;
+    }
+    .bar i {
+      display: block;
+      height: 100%;
+      background: var(--teal);
+      border-radius: inherit;
+    }
+    .bar i.short { background: var(--bad); }
+    .sorts { display: flex; gap: 0.4rem; margin-bottom: 0.65rem; flex-wrap: wrap; }
+    .sorts button {
+      border: 1px solid var(--line);
+      background: #fff;
+      font: inherit;
+      font-weight: 700;
+      font-size: 0.82rem;
+      border-radius: 999px;
+      padding: 0.45rem 0.75rem;
+      min-height: 40px;
+    }
+    .sorts button.on { background: var(--deep); color: #fff; border-color: var(--deep); }
+    .person { padding: 0.85rem; margin-bottom: 0.65rem; }
+    .person.head { display: flex; justify-content: space-between; gap: 0.6rem; align-items: flex-start; }
+    .person h3 { margin: 0; font-size: 1.02rem; line-height: 1.25; }
+    .tag {
+      font-size: 0.72rem;
+      font-weight: 800;
+      border-radius: 999px;
+      padding: 0.2rem 0.5rem;
+      white-space: nowrap;
+    }
+    .tag.GOOD { background: var(--good-bg); color: var(--good); }
+    .tag.WATCH { background: var(--watch-bg); color: var(--watch); }
+    .tag.BAD { background: var(--bad-bg); color: var(--bad); }
+    .tag.NONE { background: #eef3f2; color: var(--muted); }
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.45rem;
+      margin-top: 0.7rem;
+    }
+    .stat { background: #f4f8f7; border-radius: 12px; padding: 0.45rem 0.55rem; }
+    .stat span { display: block; color: var(--muted); font-size: 0.72rem; font-weight: 700; }
+    .stat b { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+    details { margin-top: 0.7rem; }
+    summary { font-weight: 700; cursor: pointer; min-height: 36px; }
+    .days {
+      display: flex;
+      gap: 0.35rem;
+      overflow-x: auto;
+      padding: 0.55rem 0 0.15rem;
+      -webkit-overflow-scrolling: touch;
+    }
+    .day {
+      flex: 0 0 auto;
+      width: 3.3rem;
+      border-radius: 12px;
+      text-align: center;
+      padding: 0.35rem 0.15rem 0.4rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .day b { display: block; font-size: 1rem; }
+    .day small { display: block; font-size: 0.62rem; font-weight: 700; }
+    .day.hit { background: var(--good-bg); color: var(--good); }
+    .day.miss { background: var(--bad-bg); color: var(--bad); }
+    .rules { margin: 0; padding-left: 1.1rem; color: var(--muted); }
+    .rules li { margin: 0.35rem 0; line-height: 1.35; }
+    .src { margin-top: 0.8rem; color: var(--muted); font-size: 0.75rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="top">
+      <div>
+        <p class="eyebrow">NTE field</p>
+        <h1>PM from 1 Nov</h1>
+        <p class="sub" id="subline">Minimum 4 work orders each day</p>
+      </div>
+      <div class="actions">
+        <a class="update" href="https://github.com/ansrkian-gif/pm-h1-2027/issues/1">Update now</a>
+        <button class="reload" type="button" id="reload">Reload</button>
+      </div>
+    </div>
+  </header>
+  <main id="app"></main>
+  <script>
+    (function () {
+      var data = window.DASHBOARD_DATA;
+      var app = document.getElementById("app");
+      document.getElementById("reload").onclick = function () {
+        var url = new URL(location.href);
+        url.searchParams.set("t", Date.now());
+        location.replace(url.toString());
+      };
+      if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
+        navigator.serviceWorker.register("sw.js").catch(function () {});
+      }
+      if (!data) {
+        app.innerHTML = '<div class="banner"><strong>Dashboard file is missing.</strong> Run Update-Dashboard.bat, then tap Reload.</div>';
+        return;
+      }
+
+      var sort = "missed";
+      var showAllDays = {};
+
+      function esc(s) {
+        return String(s == null ? "" : s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+      function prettyDate(iso) {
+        if (!iso) return "";
+        var p = String(iso).split("-");
+        var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        return Number(p[2]) + " " + months[Number(p[1]) - 1] + " " + p[0];
+      }
+      function dash(v) {
+        return v === null || v === undefined || v === "" ? "—" : String(v);
+      }
+      function pct(v) {
+        return v === null || v === undefined ? "—" : v + "%";
+      }
+
+      function render() {
+        var k = data.kpis || {};
+        var waiting = data.phase === "waiting" || !k.closedDays;
+        var people = (data.fme || []).slice();
+        people.sort(function (a, b) {
+          if (sort === "name") return a.name.localeCompare(b.name);
+          if (sort === "eff") return (b.efficiency || 0) - (a.efficiency || 0) || a.name.localeCompare(b.name);
+          return (b.totalMissed || 0) - (a.totalMissed || 0) || a.name.localeCompare(b.name);
+        });
+
+        var html = "";
+        document.getElementById("subline").textContent =
+          prettyDate(data.periodStart) + " through " + (data.todayLabel || "today") + " · updated " + (data.generatedAt || "");
+
+        if (waiting) {
+          html += '<div class="banner"><strong>No work orders from ' + esc(prettyDate(data.periodStart)) + ' yet.</strong>Each FME needs at least 4 completed work orders every working day. This page updates by itself at 8:00 PM.</div>';
+        } else if (data.todayFriday) {
+          html += '<div class="banner"><strong>Friday is a rest day.</strong>No target today. Totals below are through the last working day.</div>';
+        } else if (!data.todayClosed) {
+          html += '<div class="banner"><strong>Today is still open.</strong>The 8:00 PM update adds today into efficiency, average, days missed, and WOs missed.</div>';
+        }
+
+        html += '<section class="kpis">';
+        html += kpi("Efficiency", waiting ? "—" : pct(k.efficiency), "done / (days x 4)");
+        html += kpi("Average", waiting ? "—" : dash(k.average), "work orders / day");
+        html += kpi("Days missed", waiting ? "—" : dash(k.daysMissed), "days under 4");
+        html += kpi("WOs missed", waiting ? "—" : dash(k.totalMissed), "short of 4, added up");
+        html += "</section>";
+
+        if (!waiting && (data.todayRows || []).length) {
+          html += '<section class="card"><h2>' + esc(data.todayLabel) + (data.todayFriday ? " · rest day" : " · today") + "</h2>";
+          if (!data.todayFriday) {
+            html += '<p class="note" style="margin-top:0">Team ' + k.todayWorkOrders + " / " + k.todayExpected + " work orders</p>";
+          }
+          data.todayRows.forEach(function (row) {
+            var cls = row.rest ? "" : row.hit ? "good" : "bad";
+            var label = row.rest ? (row.actual ? row.actual + " extra" : "Rest") : row.actual + " / " + row.target;
+            var width = row.target ? Math.min(100, Math.round((100 * row.actual) / row.target)) : 0;
+            html += '<div class="row"><div class="who">' + esc(row.short) + "</div>";
+            html += '<div class="score ' + cls + '">' + esc(label) + "</div>";
+            if (!row.rest) {
+              html += '<div class="bar"><i class="' + (row.hit ? "" : "short") + '" style="width:' + width + '%"></i></div>';
+            }
+            html += "</div>";
+          });
+          html += "</section>";
+        }
+
+        html += '<div class="sorts">';
+        html += sortBtn("missed", "Most missed");
+        html += sortBtn("eff", "Efficiency");
+        html += sortBtn("name", "Name");
+        html += "</div>";
+
+        people.forEach(function (p, index) {
+          html += '<article class="card person">';
+          html += '<div class="head"><h3>' + esc(p.name) + '</h3><span class="tag ' + esc(p.shape || "NONE") + '">' + esc(shapeLabel(p.shape)) + "</span></div>";
+          html += '<div class="stats">';
+          html += stat("Efficiency", pct(p.efficiency));
+          html += stat("Average / day", dash(p.average));
+          html += stat("Days missed", waiting ? "—" : dash(p.daysMissed));
+          html += stat("WOs missed", waiting ? "—" : dash(p.totalMissed));
+          html += "</div>";
+          var days = p.daily || [];
+          if (days.length) {
+            var visible = showAllDays[p.name] ? days : days.slice(-21);
+            html += "<details" + (index === 0 ? " open" : "") + "><summary>Each day · " + days.length + " working days</summary><div class=\"days\">";
+            visible.forEach(function (d) {
+              html += '<div class="day ' + (d.hit ? "hit" : "miss") + '"><b>' + d.actual + '</b><small>' + esc(d.label.replace(/^[A-Za-z]+ /, "")) + "</small></div>";
+            });
+            html += "</div>";
+            if (days.length > 21) {
+              html += '<button type="button" class="reload" data-more="' + esc(p.name) + '" style="margin-top:.55rem;color:var(--deep);border-color:var(--line);background:#fff">' + (showAllDays[p.name] ? "Show last 21" : "Show all days") + "</button>";
+            }
+            html += "</details>";
+          } else {
+            html += '<p class="note">Target ' + data.dailyTarget + " work orders a day from " + esc(prettyDate(data.periodStart)) + ". Friday does not count.</p>";
+          }
+          html += "</article>";
+        });
+
+        html += '<section class="card"><h2>How this page updates</h2><ul class="rules">';
+        (data.rules || []).forEach(function (rule) { html += "<li>" + esc(rule) + "</li>"; });
+        html += "<li>Every day at 8:00 PM the cloud downloads the work orders and updates this page. The phone does not need the office Wi-Fi.</li>";
+        html += "<li>To update now, tap Update now, send the word refresh, wait about 3 minutes, then tap Reload.</li>";
+        html += "</ul>";
+        if (data.sourceFile) html += '<p class="src">Source ' + esc(data.sourceFile) + "</p>";
+        html += "</section>";
+        app.innerHTML = html;
+
+        app.querySelectorAll("[data-sort]").forEach(function (btn) {
+          btn.onclick = function () { sort = btn.getAttribute("data-sort"); render(); };
+        });
+        app.querySelectorAll("[data-more]").forEach(function (btn) {
+          btn.onclick = function () {
+            var name = btn.getAttribute("data-more");
+            showAllDays[name] = !showAllDays[name];
+            render();
+          };
+        });
+      }
+
+      function kpi(label, value, hint) {
+        return '<div class="kpi"><span>' + esc(label) + "</span><b>" + esc(value) + "</b><small>" + esc(hint) + "</small></div>";
+      }
+      function stat(label, value) {
+        return '<div class="stat"><span>' + esc(label) + "</span><b>" + esc(value) + "</b></div>";
+      }
+      function sortBtn(id, label) {
+        return '<button type="button" data-sort="' + id + '" class="' + (sort === id ? "on" : "") + '">' + esc(label) + "</button>";
+      }
+      function shapeLabel(shape) {
+        if (shape === "GOOD") return "On target";
+        if (shape === "WATCH") return "Watch";
+        if (shape === "BAD") return "Behind";
+        return "Not started";
+      }
+
+      render();
+    })();
+  </script>
+</body>
+</html>

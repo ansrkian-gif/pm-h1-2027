@@ -3,7 +3,8 @@ name: Daily PM H1 dashboard
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 15 * * *"
+    # 17:00 UTC = 20:00 Kuwait
+    - cron: "0 17 * * *"
   issues:
     types: [opened]
   issue_comment:
@@ -71,6 +72,13 @@ jobs:
           STAMP=$(date +%s)
           sed -i "s/__BUILD_STAMP__/${STAMP}/g" dashboard/index.html dashboard/alert.html dashboard/site.html
           python3 scripts/daily_alert.py
+      - name: Build November phone dashboard
+        shell: pwsh
+        env:
+          EXTRACT_PATH: ${{ github.workspace }}/cloud/extract.xlsx
+          DASHBOARD_PIN: ${{ secrets.DASHBOARD_PIN }}
+          PAGES_URL: https://ansrkian-gif.github.io/pm-h1-2027/nov/
+        run: ./scripts/Build-NovDashboard.ps1 -DashName nov
       - name: Upload OWS screenshots if pull failed
         if: failure()
         uses: actions/upload-artifact@v4
@@ -90,11 +98,13 @@ jobs:
           git clone --branch gh-pages --single-branch "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" _site
           cp dashboard/index.html dashboard/alert.html dashboard/site.html dashboard/sw.js dashboard/pin-gate.js dashboard/manifest.webmanifest dashboard/404.html _site/
           cp dashboard/dashboard-data.js dashboard/alert-data.js dashboard/site-lookup.js dashboard/pin.js _site/
-          mkdir -p _site/issues/1
+          mkdir -p _site/issues/1 _site/nov
           cp dashboard/issues/1/index.html _site/issues/1/
+          cp nov/index.html nov/pin-gate.js nov/sw.js nov/manifest.webmanifest nov/404.html nov/dashboard-data.js nov/pin.js nov/icon-192.png nov/icon-512.png _site/nov/
           touch _site/.nojekyll
           cd _site
           git add index.html alert.html site.html sw.js pin-gate.js pin.js manifest.webmanifest dashboard-data.js alert-data.js site-lookup.js 404.html issues/1/index.html .nojekyll
+          git add nov
           git diff --cached --quiet && echo "No page changes" && exit 0
           git commit -m "Daily OWS dashboard refresh"
           git push
