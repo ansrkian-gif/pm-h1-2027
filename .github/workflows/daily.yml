@@ -100,7 +100,7 @@ jobs:
           cp dashboard/dashboard-data.js dashboard/alert-data.js dashboard/site-lookup.js dashboard/pin.js _site/
           mkdir -p _site/issues/1 _site/nov
           cp dashboard/issues/1/index.html _site/issues/1/
-          cp nov/index.html nov/pin-gate.js nov/sw.js nov/manifest.webmanifest nov/404.html nov/dashboard-data.js nov/pin.js nov/icon-192.png nov/icon-512.png _site/nov/
+          cp nov/index.html nov/alert.html nov/pin-gate.js nov/sw.js nov/manifest.webmanifest nov/404.html nov/dashboard-data.js nov/alert-data.js nov/pin.js nov/icon-192.png nov/icon-512.png _site/nov/
           touch _site/.nojekyll
           cd _site
           git add index.html alert.html site.html sw.js pin-gate.js pin.js manifest.webmanifest dashboard-data.js alert-data.js site-lookup.js 404.html issues/1/index.html .nojekyll
@@ -108,3 +108,28 @@ jobs:
           git diff --cached --quiet && echo "No page changes" && exit 0
           git commit -m "Daily OWS dashboard refresh"
           git push
+      - name: Send one 8 PM popup
+        if: success() && github.event_name == 'schedule'
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
+          NTFY_URL: ${{ secrets.NTFY_URL }}
+        run: |
+          if [ -z "$NTFY_TOPIC" ]; then
+            echo "NTFY_TOPIC is not set. Popup skipped."
+            exit 0
+          fi
+          BASE="${NTFY_URL:-https://ntfy.sh}"
+          BASE="${BASE%/}"
+          CLICK="https://ansrkian-gif.github.io/pm-h1-2027/nov/alert.html"
+          TITLE=$(tr -d '\r' < nov/ntfy-title.txt)
+          AUTH=()
+          if [ -n "$NTFY_TOKEN" ]; then AUTH=(-H "Authorization: Bearer $NTFY_TOKEN"); fi
+          curl -fsS "${AUTH[@]}" \
+            -H "Title: ${TITLE}" \
+            -H "Priority: 5" \
+            -H "Tags: rotating_light" \
+            -H "Click: ${CLICK}" \
+            -H "Actions: view, Open full screen, ${CLICK}, clear=true" \
+            --data-binary @nov/ntfy-body.txt \
+            "${BASE}/${NTFY_TOPIC}"

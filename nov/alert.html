@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#7f1d1d" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>PM daily popup</title>
+  <script>
+    document.write('<script src="alert-data.js?v=' + Date.now() + '"><\/script>');
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #7f1d1d;
+      color: #fff;
+      padding: max(0.7rem, env(safe-area-inset-top)) max(0.85rem, env(safe-area-inset-right))
+               max(0.7rem, env(safe-area-inset-bottom)) max(0.85rem, env(safe-area-inset-left));
+    }
+    body.ok { background: #14532d; }
+    body.rest { background: #1e293b; }
+    body.cleared {
+      background: #0f172a;
+      color: #94a3b8;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 800;
+    }
+    .top { display: flex; justify-content: space-between; align-items: flex-end; gap: 0.6rem; }
+    .eyebrow { margin: 0; letter-spacing: 0.14em; text-transform: uppercase; font-size: 0.72rem; font-weight: 800; opacity: 0.8; }
+    h1 { margin: 0.1rem 0 0; font-size: clamp(1.6rem, 7vw, 2.3rem); letter-spacing: -0.03em; line-height: 1; }
+    .team { font-size: clamp(1.8rem, 8vw, 2.8rem); font-weight: 900; font-variant-numeric: tabular-nums; line-height: 0.9; text-align: right; }
+    .team small { display: block; font-size: 0.7rem; font-weight: 700; opacity: 0.8; letter-spacing: 0.06em; }
+    ul { list-style: none; padding: 0; margin: 0.7rem 0 0; flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; gap: 0.4rem; }
+    li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      background: rgba(255,255,255,0.14);
+      border-radius: 16px;
+      padding: 0.45rem 0.75rem;
+      min-height: 0;
+    }
+    li b { font-size: clamp(1.15rem, 5.2vw, 1.7rem); line-height: 1.1; }
+    li span { font-size: clamp(1.7rem, 8vw, 2.6rem); font-weight: 900; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    li.miss { background: rgba(0,0,0,0.28); }
+    .foot {
+      margin-top: 0.45rem;
+      font-size: 0.72rem;
+      line-height: 1.35;
+      opacity: 0.88;
+      font-weight: 600;
+    }
+    button {
+      margin-top: 0.55rem;
+      width: 100%;
+      border: 0;
+      border-radius: 999px;
+      min-height: 48px;
+      font: inherit;
+      font-weight: 800;
+      font-size: 1rem;
+      background: #fff;
+      color: #111;
+    }
+  </style>
+</head>
+<body>
+  <main id="screen"></main>
+  <script>
+    (function () {
+      var data = window.ALERT_DATA;
+      var screen = document.getElementById("screen");
+      if (!data) {
+        screen.textContent = "Popup data is not ready yet.";
+        return;
+      }
+      if (sessionStorage.getItem("pm-popup-clear") === data.date) {
+        document.body.className = "cleared";
+        screen.textContent = "Cleared for " + data.dayLabel;
+        return;
+      }
+      var allHit = !data.friday && (data.rows || []).length && (data.rows || []).every(function (r) { return r.hit; });
+      document.body.className = data.friday ? "rest" : allHit ? "ok" : "";
+      var theme = data.friday ? "#1e293b" : allHit ? "#14532d" : "#7f1d1d";
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute("content", theme);
+
+      function esc(s) {
+        return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+      }
+      var p = data.progress || {};
+      var html = '<div class="top"><div><p class="eyebrow">PM daily</p><h1>' + esc(data.dayLabel) + "</h1></div>";
+      if (!data.friday) {
+        html += '<div class="team">' + data.todayActual + "/" + data.todayExpected + "<small>today</small></div>";
+      } else {
+        html += '<div class="team">Rest<small>Friday</small></div>';
+      }
+      html += "</div><ul>";
+      (data.rows || []).forEach(function (row) {
+        var label = row.rest ? (row.actual ? row.actual + " extra" : "Rest") : row.actual + "/" + row.target;
+        html += '<li class="' + (row.hit ? "" : "miss") + '"><b>' + esc(row.name) + "</b><span>" + esc(label) + "</span></li>";
+      });
+      html += '</ul><p class="foot">Since 1 Nov: ' + (p.workOrders == null ? "—" : p.workOrders) + " of " + (p.expected == null ? "—" : p.expected);
+      html += " · " + (p.efficiency == null ? "—" : p.efficiency + "%") + " · average " + (p.average == null ? "—" : p.average);
+      html += " · " + (p.daysMissed == null ? "—" : p.daysMissed) + " days missed · " + (p.totalMissed == null ? "—" : p.totalMissed) + " short</p>";
+      html += '<button type="button" id="clear">Clear</button>';
+      screen.innerHTML = html;
+      document.getElementById("clear").onclick = function () {
+        sessionStorage.setItem("pm-popup-clear", data.date);
+        document.body.className = "cleared";
+        screen.textContent = "Cleared";
+      };
+      document.body.addEventListener("click", function once() {
+        var el = document.documentElement;
+        if (el.requestFullscreen) el.requestFullscreen().catch(function () {});
+        document.body.removeEventListener("click", once);
+      });
+    })();
+  </script>
+</body>
+</html>

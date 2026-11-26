@@ -549,6 +549,63 @@ $utf8 = New-Object System.Text.UTF8Encoding $false
 [IO.File]::WriteAllText((Join-Path $Dash "dashboard-data.js"), "window.DASHBOARD_DATA = $json;`n", $utf8)
 [IO.File]::WriteAllText((Join-Path $Dash "ntfy.txt"), $ntfy, $utf8)
 
+$alertRows = New-Object System.Collections.Generic.List[hashtable]
+foreach ($row in @($todaySorted)) {
+    $alertRows.Add(@{
+        name   = [string]$row.short
+        full   = [string]$row.name
+        actual = $row.actual
+        target = $row.target
+        hit    = [bool]$row.hit
+        rest   = [bool]$row.rest
+    })
+}
+$alert = @{
+    dayLabel      = [string]$payload.todayLabel
+    date          = [string]$today
+    friday        = [bool]$todayFriday
+    target        = [int]$target
+    todayActual   = $payload.kpis.todayWorkOrders
+    todayExpected = $payload.kpis.todayExpected
+    rows          = @($alertRows.ToArray())
+    progress      = @{
+        from        = [string]$period
+        through     = $(if ($scoreThrough) { [string]$scoreThrough } else { [string]$today })
+        workOrders  = $payload.kpis.workOrders
+        expected    = $payload.kpis.expected
+        efficiency  = $payload.kpis.efficiency
+        average     = $payload.kpis.average
+        daysMissed  = $payload.kpis.daysMissed
+        totalMissed = $payload.kpis.totalMissed
+    }
+}
+$alertJson = $alert | ConvertTo-Json -Depth 6 -Compress
+[IO.File]::WriteAllText((Join-Path $Dash "alert-data.js"), "window.ALERT_DATA = $alertJson;`n", $utf8)
+
+$popup = New-Object System.Collections.Generic.List[string]
+if ($todayFriday) {
+    $popup.Add("Friday. No target today.")
+}
+foreach ($row in @($todaySorted)) {
+    if ($row.rest) {
+        $popup.Add("$($row.short)  rest")
+    } else {
+        $mark = if ($row.hit) { "OK" } else { "LOW" }
+        $popup.Add("$mark  $($row.short)  $($row.actual)/$($row.target)")
+    }
+}
+$popup.Add("")
+$popup.Add("Since 1 Nov: $($payload.kpis.workOrders)/$($payload.kpis.expected)  $($payload.kpis.efficiency)%  short $($payload.kpis.totalMissed)")
+if (-not $todayFriday -and @($behind).Count -eq 0 -and @($todaySorted).Count -gt 0) {
+    $popupTitle = "PM $($payload.todayLabel) on target"
+} elseif ($todayFriday) {
+    $popupTitle = "PM $($payload.todayLabel) rest day"
+} else {
+    $popupTitle = "PM $($payload.todayLabel) behind"
+}
+[IO.File]::WriteAllText((Join-Path $Dash "ntfy-title.txt"), $popupTitle, $utf8)
+[IO.File]::WriteAllText((Join-Path $Dash "ntfy-body.txt"), (($popup -join "`n") + "`n"), $utf8)
+
 $pin = $env:DASHBOARD_PIN
 if (-not $pin) {
     $pinFile = Join-Path $Dash ".pin-local.txt"
