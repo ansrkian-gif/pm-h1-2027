@@ -97,7 +97,8 @@ function Read-SharedStrings([xml]$ssXml) {
 
 function Read-WorkOrders([string]$path) {
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    $tmp = Join-Path $env:TEMP ("pm-nov2027-" + [guid]::NewGuid().ToString("n") + ".xlsx")
+    $tempRoot = [IO.Path]::GetTempPath()
+    $tmp = Join-Path $tempRoot ("pm-nov2027-" + [guid]::NewGuid().ToString("n") + ".xlsx")
     Copy-Item -LiteralPath $path -Destination $tmp
     $zip = [System.IO.Compression.ZipFile]::OpenRead($tmp)
     try {
