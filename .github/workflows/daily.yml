@@ -35,7 +35,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           for i in 1 2 3; do
-            gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "Refresh started. Come back to the dashboard, wait 2-4 minutes, then tap Reload (PIN 4221)." && exit 0
+            gh issue comment ${{ github.event.issue.number }} --repo ${{ github.repository }} --body "Refresh started. You can lock the phone. The full-screen popup arrives when this finishes, about 3 minutes. Then open the dashboard and tap Reload." && exit 0
             sleep 8
           done
           echo "Could not post issue comment; continuing refresh anyway."
@@ -108,8 +108,8 @@ jobs:
           git diff --cached --quiet && echo "No page changes" && exit 0
           git commit -m "Daily OWS dashboard refresh"
           git push
-      - name: Send one 8 PM popup
-        if: success() && github.event_name == 'schedule'
+      - name: Send the phone popup
+        if: success()
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_TOKEN: ${{ secrets.NTFY_TOKEN }}
@@ -133,3 +133,9 @@ jobs:
             -H "Actions: view, Open full screen, ${CLICK}, clear=true" \
             --data-binary @nov/ntfy-body.txt \
             "${BASE}/${NTFY_TOPIC}"
+      - name: Close the refresh request
+        if: success() && github.event_name == 'issues'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh issue close ${{ github.event.issue.number }} --repo ${{ github.repository }} --reason completed
