@@ -438,7 +438,13 @@
       }
 
       function graphCard(list) {
-        var people = list.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+        var people = list.slice().sort(function (a, b) {
+          var byEfficiency = (b.efficiency || 0) - (a.efficiency || 0);
+          if (byEfficiency) return byEfficiency;
+          var byDone = (b.actual || 0) - (a.actual || 0);
+          if (byDone) return byDone;
+          return a.name.localeCompare(b.name);
+        });
         var seen = {};
         var axis = [];
         people.forEach(function (person) {
